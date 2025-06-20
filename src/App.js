@@ -261,22 +261,16 @@ const AnimatedTitle = ({ text }) => {
 const HeroSection = ({ onLinkClick }) => {
   return (
     <section id="home" className="min-h-screen flex items-center justify-center text-center bg-gray-900 relative overflow-hidden">
-      {/* Background Image Layer */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center" 
-        style={{
-          backgroundImage: `url(https://i.imgur.com/DTzLRi9.gif)`,
-        }}
-      ></div>
-      {/* Blue Overlay Layer */}
-      <div className="absolute inset-0 z-1 bg-gray-900 opacity-80"></div>
-      
-      {/* Content Layer */}
+        <div className="absolute inset-0 z-0 opacity-20" style={{backgroundImage: 'url(https://www.transparenttextures.com/patterns/graphy.png)'}}></div>
+        <div className="absolute inset-0 z-0 bg-cover bg-center" style={{backgroundImage: `url(https://i.imgur.com/DTzLRi9.gif)`}}></div>
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent"></div>
+        <div className="absolute inset-0 z-10 bg-gradient-to-r from-gray-900 via-transparent to-gray-900"></div>
+
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8 }}
-        className="z-10 relative"
+        className="z-20 relative"
       >
         <AnimatedTitle text="Shafayat Mustafa" />
         <p className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto mb-8">
