@@ -94,7 +94,25 @@ const projects = [
       ],
       outcome: "The final model successfully predicts various types of machine failure with high accuracy. This provides a valuable tool for industrial maintenance planning, allowing for a shift from reactive repairs to a proactive, data-driven maintenance strategy."
     }
-  }
+  },
+  {
+    id: 4,
+    title: "Keras House Price Prediction",
+    category: "Machine Learning",
+    imageUrl: "https://repository-images.githubusercontent.com/782520106/8c2e3e8f-0834-42de-8ae4-c4297e7c5780",
+    summary: "Deep learning model to predict house prices using Keras and real-world datasets.",
+    tools: ["Python", "Keras", "Pandas", "Matplotlib"],
+    details: {
+      headline: "Keras-Powered House Price Estimator",
+      description: "A neural network model that predicts house prices by learning from tabular datasets.",
+      challenges: [
+        { title: "Overfitting on Small Dataset", text: "The model initially overfit the training data.", solution: "Introduced dropout layers and early stopping." },
+        { title: "Feature Selection", text: "Handling irrelevant features was tricky.", solution: "Performed correlation analysis and manual curation." }
+      ],
+      visuals: [],
+      outcome: "Achieved good generalization on test set and enabled insight into feature importances."
+    }
+  },
 ];
 
 const skills = [
