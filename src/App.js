@@ -113,6 +113,57 @@ const projects = [
       outcome: "Achieved good generalization on test set and enabled insight into feature importances."
     }
   },
+  {
+    id: 5,
+    title: "Robotic Arm Kinematics",
+    category: "Mechanics",
+    imageUrl: "https://repository-images.githubusercontent.com/785628623/45d8c1ed-90b5-4642-a843-7f5b87e1dd03",
+    summary: "2D robotic arm forward and inverse kinematics solver with visualization.",
+    tools: ["Python", "NumPy", "Matplotlib"],
+    details: {
+      headline: "Kinematics Simulator for Robotic Arm",
+      description: "Built a Python-based tool to compute and visualize forward/inverse kinematics.",
+      challenges: [
+        { title: "Singularity Handling", text: "Singular configurations caused instability.", solution: "Added constraints and fallback inverse calculations." }
+      ],
+      visuals: [],
+      outcome: "Enabled education and prototyping of kinematic control logic."
+    }
+  },
+  {
+    id: 6,
+    title: "3D Robotic Arm Kinematics",
+    category: "Mechanics",
+    imageUrl: "https://repository-images.githubusercontent.com/785628857/6fd189ec-4d00-4f00-8b4c-3a289b65a7cf",
+    summary: "Interactive visualization of 3D kinematic chain for robotics.",
+    tools: ["Python", "Matplotlib", "3D Geometry"],
+    details: {
+      headline: "3D Visualization of Kinematic Chains",
+      description: "Extended 2D robotic arm solver to full 3D with custom rendering.",
+      challenges: [
+        { title: "3D Joint Alignment", text: "Complex joint vectors needed accurate orientation.", solution: "Used rotation matrices and cross product checks." }
+      ],
+      visuals: [],
+      outcome: "Rendered 3D motion for educational and proof-of-concept use cases."
+    }
+  },
+  {
+    id: 7,
+    title: "6-DOF Robotics Simulator",
+    category: "Simulation",
+    imageUrl: "https://repository-images.githubusercontent.com/785629005/7db3f1c3-e1ef-48f7-946b-719e33b9c85e",
+    summary: "Simulates a full 6-DOF robotic manipulator in a virtual space.",
+    tools: ["Python", "PyOpenGL", "Forward Kinematics", "Matrix Transformations"],
+    details: {
+      headline: "Full DOF Robot Simulation Platform",
+      description: "Simulates robotic arm movement and workspace coverage in 3D.",
+      challenges: [
+        { title: "Rendering & Performance", text: "Initial implementation was too slow.", solution: "Optimized rendering pipeline using PyOpenGL display lists." }
+      ],
+      visuals: [],
+      outcome: "Successfully simulated realistic joint motion and workspace limits."
+    }
+  }
 ];
 
 const skills = [
