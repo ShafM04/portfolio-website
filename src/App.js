@@ -185,111 +185,99 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
-// --- Background Animation Component (Updated) ---
-const BackgroundAnimation = () => {
+// --- Background Animation Component (Updated with Scroll Transition) ---
+const BackgroundAnimation = ({ scrollProgress }) => {
     const mountRef = useRef(null);
+    const sceneRef = useRef(null);
+    const cameraRef = useRef(null);
+    const rendererRef = useRef(null);
+    const materialsRef = useRef({});
+    const animationFrameIdRef = useRef(null);
 
     useEffect(() => {
         const mount = mountRef.current;
-        let scene, camera, renderer;
-        let animationFrameId;
-        const signals = [];
-        const risingParticles = [];
+        sceneRef.current = new THREE.Scene();
+        cameraRef.current = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        cameraRef.current.position.z = 150;
 
-        const init = () => {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 150;
-
-            renderer = new THREE.WebGLRenderer({ alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            mount.appendChild(renderer.domElement);
-
-            // --- Circuitry ---
-            const GRID_SIZE = 30; // Reduced Grid Size
-            const CELL_SIZE = 15;
-            const HALF_GRID = (GRID_SIZE * CELL_SIZE) / 2;
-            const traceMaterial = new THREE.LineBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.2 });
-            const traceGroup = new THREE.Group();
-
-            for (let i = 0; i < 50; i++) { // Reduced number of traces
-                const points = [];
-                let x = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
-                let y = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
-                points.push(new THREE.Vector3(x, y, 0));
-
-                for (let j = 0; j < Math.floor(Math.random() * 5) + 3; j++) {
-                    const length = (Math.floor(Math.random() * 5) + 2) * CELL_SIZE;
-                    if (Math.random() > 0.5) x += Math.random() > 0.5 ? length : -length;
-                    else y += Math.random() > 0.5 ? length : -length;
-                    x = Math.max(-HALF_GRID, Math.min(HALF_GRID, x));
-                    y = Math.max(-HALF_GRID, Math.min(HALF_GRID, y));
-                    points.push(new THREE.Vector3(x, y, 0));
-                }
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const trace = new THREE.Line(geometry, traceMaterial);
-                traceGroup.add(trace);
-
-                if (Math.random() > 0.5 && points.length > 1) {
-                    signals.push({
-                        points,
-                        progress: Math.random(),
-                        speed: Math.random() * 0.004 + 0.002,
-                        particle: createSignalParticle(0x00ffff, 1)
-                    });
-                }
-            }
-            scene.add(traceGroup);
-            signals.forEach(s => scene.add(s.particle));
-
-            // --- Rising Particles ---
-            const particleMaterial = new THREE.SpriteMaterial({
-                color: 0x00ffff,
-                blending: THREE.AdditiveBlending,
-                transparent: true,
-                opacity: 0.5
-            });
-
-            for (let i = 0; i < 200; i++) { // Reduced particle count
-                const particle = new THREE.Sprite(particleMaterial);
-                const x = Math.random() * 600 - 300;
-                const y = Math.random() * 600 - 300;
-                const z = Math.random() * -200;
-                particle.position.set(x, y, z);
-                particle.scale.set(0.5, Math.random() * 6 + 2, 1);
-                risingParticles.push({
-                    sprite: particle,
-                    speed: Math.random() * 0.3 + 0.1
-                });
-                scene.add(particle);
-            }
-
-            window.addEventListener('resize', onWindowResize, false);
-            animate();
-        };
+        rendererRef.current = new THREE.WebGLRenderer({ alpha: true });
+        rendererRef.current.setPixelRatio(window.devicePixelRatio);
+        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+        mount.appendChild(rendererRef.current.domElement);
         
-        const createSignalParticle = (color, size) => {
-            const geometry = new THREE.SphereGeometry(size, 8, 8);
-            const material = new THREE.MeshBasicMaterial({ color });
-            return new THREE.Mesh(geometry, material);
-        };
+        const scene = sceneRef.current;
+        const renderer = rendererRef.current;
+
+        // --- Scene 1: Circuitry ---
+        const circuitGroup = new THREE.Group();
+        const signals = [];
+        const GRID_SIZE = 30;
+        const CELL_SIZE = 15;
+        const HALF_GRID = (GRID_SIZE * CELL_SIZE) / 2;
+        materialsRef.current.trace = new THREE.LineBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.2 });
+        materialsRef.current.signal = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+
+        for (let i = 0; i < 50; i++) {
+            const points = [];
+            let x = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
+            let y = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
+            points.push(new THREE.Vector3(x, y, 0));
+            for (let j = 0; j < Math.floor(Math.random() * 5) + 3; j++) {
+                const length = (Math.floor(Math.random() * 5) + 2) * CELL_SIZE;
+                if (Math.random() > 0.5) x += Math.random() > 0.5 ? length : -length;
+                else y += Math.random() > 0.5 ? length : -length;
+                x = Math.max(-HALF_GRID, Math.min(HALF_GRID, x));
+                y = Math.max(-HALF_GRID, Math.min(HALF_GRID, y));
+                points.push(new THREE.Vector3(x, y, 0));
+            }
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const trace = new THREE.Line(geometry, materialsRef.current.trace);
+            circuitGroup.add(trace);
+            if (Math.random() > 0.5 && points.length > 1) {
+                const geometry = new THREE.SphereGeometry(1, 8, 8);
+                const particle = new THREE.Mesh(geometry, materialsRef.current.signal);
+                signals.push({ points, progress: Math.random(), speed: Math.random() * 0.004 + 0.002, particle });
+                circuitGroup.add(particle);
+            }
+        }
+        scene.add(circuitGroup);
+
+        // --- Scene 2: Red Streaks ---
+        const streaksGroup = new THREE.Group();
+        materialsRef.current.streak = new THREE.SpriteMaterial({
+            color: 0xffaaaa,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            opacity: 0
+        });
+        const streaks = [];
+        for (let i = 0; i < 250; i++) {
+            const particle = new THREE.Sprite(materialsRef.current.streak);
+            const x = Math.random() * 800 - 400;
+            const y = Math.random() * 600 - 300;
+            const z = Math.random() * -300;
+            particle.position.set(x, y, z);
+            particle.scale.set(0.3, Math.random() * 5 + 2, 1);
+            streaks.push({ sprite: particle, speed: Math.random() * 0.5 + 0.2 });
+            streaksGroup.add(particle);
+        }
+        scene.add(streaksGroup);
 
         const onWindowResize = () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+            cameraRef.current.aspect = window.innerWidth / window.innerHeight;
+            cameraRef.current.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         };
+        window.addEventListener('resize', onWindowResize, false);
 
         const animate = () => {
-            animationFrameId = requestAnimationFrame(animate);
-
+            animationFrameIdRef.current = requestAnimationFrame(animate);
+            
+            // Animate signals
             signals.forEach(signal => {
                 signal.progress = (signal.progress + signal.speed) % 1;
                 let totalLength = 0;
-                for (let i = 0; i < signal.points.length - 1; i++) {
-                    totalLength += signal.points[i].distanceTo(signal.points[i + 1]);
-                }
+                for (let i = 0; i < signal.points.length - 1; i++) totalLength += signal.points[i].distanceTo(signal.points[i + 1]);
                 const currentDist = signal.progress * totalLength;
                 let accumulatedLength = 0;
                 for (let i = 0; i < signal.points.length - 1; i++) {
@@ -303,26 +291,45 @@ const BackgroundAnimation = () => {
                 }
             });
 
-            risingParticles.forEach(p => {
-                p.sprite.position.y += p.speed;
-                if (p.sprite.position.y > 300) {
-                    p.sprite.position.y = -300;
-                }
+            // Animate streaks
+            streaks.forEach(p => {
+                p.sprite.position.x += p.speed;
+                if (p.sprite.position.x > 400) p.sprite.position.x = -400;
             });
 
-            renderer.render(scene, camera);
+            renderer.render(scene, cameraRef.current);
         };
-
-        init();
+        animate();
 
         return () => {
             window.removeEventListener('resize', onWindowResize);
-            cancelAnimationFrame(animationFrameId);
+            cancelAnimationFrame(animationFrameIdRef.current);
             if (mount && renderer.domElement) {
                 mount.removeChild(renderer.domElement);
             }
         };
     }, []);
+
+    // This effect handles the smooth transition based on scroll
+    useEffect(() => {
+        const { trace, signal, streak } = materialsRef.current;
+        if (trace && signal && streak) {
+            // Fade out circuit
+            trace.opacity = Math.max(0, 0.2 * (1 - scrollProgress * 2));
+            signal.opacity = Math.max(0, 1 * (1 - scrollProgress * 2));
+            
+            // Fade in streaks
+            streak.opacity = Math.min(0.7, scrollProgress * 1.5);
+
+            // Interpolate background color
+            const startColor = new THREE.Color("#0a0a1a"); // Dark blue
+            const endColor = new THREE.Color("#4d0000"); // Dark red
+            const currentColor = new THREE.Color().lerpColors(startColor, endColor, scrollProgress);
+            if (rendererRef.current) {
+                rendererRef.current.setClearColor(currentColor, 1);
+            }
+        }
+    }, [scrollProgress]);
 
     return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
 };
@@ -695,6 +702,16 @@ const ContactSection = () => (
 export default function App() {
   const [activeSection, setActiveSection] = useState('home');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+        const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+        setScrollProgress(window.scrollY / totalScroll);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const observerOptions = {
@@ -731,7 +748,7 @@ export default function App() {
 
   return (
     <div className="bg-transparent text-white font-sans">
-      <BackgroundAnimation />
+      <BackgroundAnimation scrollProgress={scrollProgress} />
       <Header activeSection={activeSection} onLinkClick={handleLinkClick} onMenuToggle={handleMenuToggle} />
       <MobileNav isOpen={menuOpen} onLinkClick={handleLinkClick} onMenuToggle={handleMenuToggle} />
       <main>
