@@ -185,108 +185,79 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
-// --- Background Animation Component (Circuit Theme) ---
+// --- NEW Background Animation Component (Circuit Board Theme) ---
 const BackgroundAnimation = () => {
     const mountRef = useRef(null);
 
     useEffect(() => {
         const mount = mountRef.current;
         let scene, camera, renderer;
-        let particles;
-        const particleInstances = [];
         let animationFrameId;
-        
-        // --- CORRECTED: 'lineSegments' is now declared in a higher scope ---
-        let lineSegments = [];
+        const signals = [];
 
         const init = () => {
-            // Scene and Camera
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000);
-            camera.position.z = 250;
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 100;
 
-            // Renderer
             renderer = new THREE.WebGLRenderer({ alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             mount.appendChild(renderer.domElement);
 
-            // --- Circuit Elements ---
-            const gridSize = 20;
-            const spacing = 20;
-            const points = [];
-            
-            // Create grid points
-            for (let i = 0; i < gridSize; i++) {
-                for (let j = 0; j < gridSize; j++) {
-                    const x = i * spacing - (gridSize * spacing) / 2;
-                    const y = j * spacing - (gridSize * spacing) / 2;
-                    const z = Math.random() * -50;
-                    points.push(new THREE.Vector3(x, y, z));
-                }
-            }
-            
-            // Create lines connecting points
-            for (let i = 0; i < points.length; i++) {
-                for (let j = i + 1; j < points.length; j++) {
-                    const p1 = points[i];
-                    const p2 = points[j];
-                    const distance = p1.distanceTo(p2);
-                    if (distance < spacing * 1.5 && Math.random() > 0.85) { // Reduce line density
-                        lineSegments.push({ start: p1, end: p2 });
+            const GRID_SIZE = 30;
+            const CELL_SIZE = 15;
+            const HALF_GRID = (GRID_SIZE * CELL_SIZE) / 2;
+
+            // Create traces
+            const traceMaterial = new THREE.LineBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.3 });
+            const traceGroup = new THREE.Group();
+
+            for (let i = 0; i < 50; i++) { // 50 traces
+                const points = [];
+                let x = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
+                let y = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
+                points.push(new THREE.Vector3(x, y, 0));
+
+                for (let j = 0; j < Math.floor(Math.random() * 5) + 3; j++) { // 3 to 7 segments
+                    const length = (Math.floor(Math.random() * 5) + 2) * CELL_SIZE;
+                    if (Math.random() > 0.5) { // Move horizontally
+                        x += Math.random() > 0.5 ? length : -length;
+                    } else { // Move vertically
+                        y += Math.random() > 0.5 ? length : -length;
                     }
+                    // Clamp to grid boundaries
+                    x = Math.max(-HALF_GRID, Math.min(HALF_GRID, x));
+                    y = Math.max(-HALF_GRID, Math.min(HALF_GRID, y));
+                    points.push(new THREE.Vector3(x, y, 0));
                 }
-            }
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const trace = new THREE.Line(geometry, traceMaterial);
+                traceGroup.add(trace);
 
-            // Create static grid points geometry
-            const pointsGeometry = new THREE.BufferGeometry().setFromPoints(points);
-            const pointsMaterial = new THREE.PointsMaterial({ color: 0x00ffff, size: 1.5 });
-            const gridPoints = new THREE.Points(pointsGeometry, pointsMaterial);
-            scene.add(gridPoints);
-
-            // Create lines geometry
-            const lineGeometry = new THREE.BufferGeometry();
-            const linePositions = [];
-            lineSegments.forEach(seg => {
-                linePositions.push(seg.start.x, seg.start.y, seg.start.z);
-                linePositions.push(seg.end.x, seg.end.y, seg.end.z);
-            });
-            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
-            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x0055aa, transparent: true, opacity: 0.3 });
-            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-            scene.add(lines);
-
-            // Create moving particles (signals)
-            const particleCount = 100;
-            const particlePositions = new Float32Array(particleCount * 3);
-            const particleGeometry = new THREE.BufferGeometry();
-            particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-            
-            const particleMaterial = new THREE.PointsMaterial({
-                color: 0x00ffff,
-                size: 3,
-                blending: THREE.AdditiveBlending,
-                transparent: true,
-                depthWrite: false,
-            });
-            particles = new THREE.Points(particleGeometry, particleMaterial);
-            scene.add(particles);
-
-            // Initialize particle instances
-            if (lineSegments.length > 0) {
-                for (let i = 0; i < particleCount; i++) {
-                    const path = lineSegments[Math.floor(Math.random() * lineSegments.length)];
-                    particleInstances.push({
-                        path,
+                // Add signals to some traces
+                if (Math.random() > 0.5 && points.length > 1) {
+                    signals.push({
+                        points,
                         progress: Math.random(),
-                        speed: Math.random() * 0.002 + 0.001,
+                        speed: Math.random() * 0.005 + 0.002,
+                        particle: createSignalParticle()
                     });
                 }
             }
+            scene.add(traceGroup);
 
-            // Event Listeners
+            // Add signal particles to the scene
+            signals.forEach(s => scene.add(s.particle));
+
             window.addEventListener('resize', onWindowResize, false);
             animate();
+        };
+        
+        const createSignalParticle = () => {
+            const geometry = new THREE.SphereGeometry(0.8, 8, 8);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+            return new THREE.Mesh(geometry, material);
         };
 
         const onWindowResize = () => {
@@ -298,29 +269,34 @@ const BackgroundAnimation = () => {
         const animate = () => {
             animationFrameId = requestAnimationFrame(animate);
 
-            // Animate particles
-            if (particleInstances.length > 0) {
-                const positions = particles.geometry.attributes.position.array;
-                for (let i = 0; i < particleInstances.length; i++) {
-                    const instance = particleInstances[i];
-                    instance.progress += instance.speed;
-
-                    if (instance.progress >= 1) {
-                        instance.progress = 0;
-                        instance.path = lineSegments[Math.floor(Math.random() * lineSegments.length)];
-                    }
-
-                    const currentPos = new THREE.Vector3().lerpVectors(instance.path.start, instance.path.end, instance.progress);
-                    positions[i * 3] = currentPos.x;
-                    positions[i * 3 + 1] = currentPos.y;
-                    positions[i * 3 + 2] = currentPos.z;
+            // Animate signals
+            signals.forEach(signal => {
+                signal.progress += signal.speed;
+                if (signal.progress >= 1) {
+                    signal.progress = 0;
                 }
-                particles.geometry.attributes.position.needsUpdate = true;
-            }
-            
-            // Rotate the whole scene slightly
-            scene.rotation.y += 0.0001;
 
+                // Calculate total length of the path
+                let totalLength = 0;
+                for (let i = 0; i < signal.points.length - 1; i++) {
+                    totalLength += signal.points[i].distanceTo(signal.points[i + 1]);
+                }
+
+                const currentDist = signal.progress * totalLength;
+                let accumulatedLength = 0;
+
+                for (let i = 0; i < signal.points.length - 1; i++) {
+                    const segmentLength = signal.points[i].distanceTo(signal.points[i + 1]);
+                    if (currentDist >= accumulatedLength && currentDist <= accumulatedLength + segmentLength) {
+                        const segmentProgress = (currentDist - accumulatedLength) / segmentLength;
+                        signal.particle.position.lerpVectors(signal.points[i], signal.points[i + 1], segmentProgress);
+                        break;
+                    }
+                    accumulatedLength += segmentLength;
+                }
+            });
+
+            scene.rotation.z += 0.0001;
             renderer.render(scene, camera);
         };
 
@@ -329,7 +305,7 @@ const BackgroundAnimation = () => {
         return () => {
             window.removeEventListener('resize', onWindowResize);
             cancelAnimationFrame(animationFrameId);
-            if(mount && renderer.domElement){
+            if (mount && renderer.domElement) {
                 mount.removeChild(renderer.domElement);
             }
         };
@@ -360,7 +336,7 @@ const AnimatedSection = ({ children, id }) => {
       }}
       initial="hidden"
       animate={controls}
-      className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col justify-center relative z-10"
+      className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 relative z-10"
     >
       {children}
     </motion.section>
@@ -446,28 +422,29 @@ const MobileNav = ({ isOpen, onLinkClick, onMenuToggle }) => (
 
 // --- Hero Section ---
 const HeroSection = ({ onLinkClick }) => (
-    <section id="home" className="min-h-screen flex items-center justify-center text-center relative overflow-hidden">
-      <div className="absolute inset-0 z-10 bg-gradient-to-b from-gray-900/30 via-gray-900/80 to-gray-900"></div>
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8 }}
-        className="z-20 relative p-4"
-      >
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 tracking-tight">Shafayat Mustafa</h1>
-        <p className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto mb-8">
-          Final Year MEng Mechanical Engineering Student | Specialising in Computational Mechanics & Mechatronic Systems
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
-          <a href="#projects" onClick={(e) => onLinkClick(e, '#projects')} className="bg-cyan-500 text-white font-bold py-3 px-8 rounded-full hover:bg-cyan-600 transition-transform duration-300 hover:scale-105 shadow-lg w-full sm:w-auto">
-            View My Projects
-          </a>
-          <a href="https://drive.google.com/file/d/1ibd-7ItlAfNufxtluoJcxAAlGTv34Oh7/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="bg-gray-700 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-600 transition-transform duration-300 hover:scale-105 shadow-lg flex items-center justify-center w-full sm:w-auto">
-            <Download className="mr-2" size={20} /> My CV
-          </a>
-        </div>
-      </motion.div>
-    </section>
+    <AnimatedSection id="home">
+      <div className="text-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+          className="z-20 relative p-4"
+        >
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 tracking-tight">Shafayat Mustafa</h1>
+          <p className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto mb-8">
+            Final Year MEng Mechanical Engineering Student | Specialising in Computational Mechanics & Mechatronic Systems
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <a href="#projects" onClick={(e) => onLinkClick(e, '#projects')} className="bg-cyan-500 text-white font-bold py-3 px-8 rounded-full hover:bg-cyan-600 transition-transform duration-300 hover:scale-105 shadow-lg w-full sm:w-auto">
+              View My Projects
+            </a>
+            <a href="https://drive.google.com/file/d/1ibd-7ItlAfNufxtluoJcxAAlGTv34Oh7/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="bg-gray-700 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-600 transition-transform duration-300 hover:scale-105 shadow-lg flex items-center justify-center w-full sm:w-auto">
+              <Download className="mr-2" size={20} /> My CV
+            </a>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatedSection>
 );
 
 // --- Skills Details Component (Corrected) ---
