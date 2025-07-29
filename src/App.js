@@ -652,7 +652,7 @@ export default function App() {
   };
 
   return (
-    <div className="bg-gray-900 text-white font-sans relative">
+    <div className="bg-transparent text-white font-sans">
       <BackgroundAnimation />
       <Header activeSection={activeSection} onLinkClick={handleLinkClick} onMenuToggle={handleMenuToggle} />
       <MobileNav isOpen={menuOpen} onLinkClick={handleLinkClick} onMenuToggle={handleMenuToggle} />
