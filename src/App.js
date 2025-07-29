@@ -185,46 +185,101 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
-// --- Background Animation Component ---
+// --- NEW: Background Animation Component (Circuit Theme) ---
 const BackgroundAnimation = () => {
     const mountRef = useRef(null);
 
     useEffect(() => {
         const mount = mountRef.current;
-        let scene, camera, renderer, stars;
-        let mouseX = 0, mouseY = 0;
+        let scene, camera, renderer;
+        let particles, lines;
+        const particleInstances = [];
 
         const init = () => {
+            // Scene and Camera
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-            camera.position.z = 1;
-            camera.rotation.x = Math.PI / 2;
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 5000);
+            camera.position.z = 250;
 
+            // Renderer
             renderer = new THREE.WebGLRenderer({ alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             mount.appendChild(renderer.domElement);
 
-            const starGeo = new THREE.BufferGeometry();
-            const starVertices = [];
-            for (let i = 0; i < 6000; i++) {
-                const x = (Math.random() - 0.5) * 2000;
-                const y = (Math.random() - 0.5) * 2000;
-                const z = (Math.random() - 0.5) * 2000;
-                starVertices.push(x, y, z);
+            // --- Circuit Elements ---
+            const gridSize = 20;
+            const spacing = 20;
+            const points = [];
+            const lineSegments = [];
+
+            // Create grid points
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const x = i * spacing - (gridSize * spacing) / 2;
+                    const y = j * spacing - (gridSize * spacing) / 2;
+                    const z = Math.random() * -50;
+                    points.push(new THREE.Vector3(x, y, z));
+                }
             }
-            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
             
-            let starMaterial = new THREE.PointsMaterial({
-                color: 0xaaaaaa,
-                size: 0.7,
+            // Create lines connecting points
+            for (let i = 0; i < points.length; i++) {
+                for (let j = i + 1; j < points.length; j++) {
+                    const p1 = points[i];
+                    const p2 = points[j];
+                    const distance = p1.distanceTo(p2);
+                    if (distance < spacing * 1.5) {
+                        lineSegments.push({ start: p1, end: p2 });
+                    }
+                }
+            }
+
+            // Create static grid points geometry
+            const pointsGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const pointsMaterial = new THREE.PointsMaterial({ color: 0x00ffff, size: 1.5 });
+            const gridPoints = new THREE.Points(pointsGeometry, pointsMaterial);
+            scene.add(gridPoints);
+
+            // Create lines geometry
+            const lineGeometry = new THREE.BufferGeometry();
+            const linePositions = [];
+            lineSegments.forEach(seg => {
+                linePositions.push(seg.start.x, seg.start.y, seg.start.z);
+                linePositions.push(seg.end.x, seg.end.y, seg.end.z);
             });
+            lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x0055aa, transparent: true, opacity: 0.3 });
+            lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+            scene.add(lines);
 
-            stars = new THREE.Points(starGeo, starMaterial);
-            scene.add(stars);
-
-            window.addEventListener('resize', onWindowResize, false);
-            document.addEventListener('mousemove', onMouseMove, false);
+            // Create moving particles (signals)
+            const particleCount = 100;
+            const particlePositions = new Float32Array(particleCount * 3);
+            const particleGeometry = new THREE.BufferGeometry();
+            particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
             
+            const particleMaterial = new THREE.PointsMaterial({
+                color: 0x00ffff,
+                size: 3,
+                blending: THREE.AdditiveBlending,
+                transparent: true,
+                depthWrite: false,
+            });
+            particles = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particles);
+
+            // Initialize particle instances
+            for (let i = 0; i < particleCount; i++) {
+                const path = lineSegments[Math.floor(Math.random() * lineSegments.length)];
+                particleInstances.push({
+                    path,
+                    progress: Math.random(),
+                    speed: Math.random() * 0.002 + 0.001,
+                });
+            }
+
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize, false);
             animate();
         };
 
@@ -234,16 +289,30 @@ const BackgroundAnimation = () => {
             renderer.setSize(window.innerWidth, window.innerHeight);
         };
 
-        const onMouseMove = (event) => {
-            mouseX = event.clientX - window.innerWidth / 2;
-            mouseY = event.clientY - window.innerHeight / 2;
-        };
-
         const animate = () => {
             requestAnimationFrame(animate);
-            stars.position.x += mouseX * 0.000002;
-            stars.position.y -= mouseY * 0.000002;
-            stars.rotation.y += 0.0005; 
+
+            // Animate particles
+            const positions = particles.geometry.attributes.position.array;
+            for (let i = 0; i < particleInstances.length; i++) {
+                const instance = particleInstances[i];
+                instance.progress += instance.speed;
+
+                if (instance.progress >= 1) {
+                    instance.progress = 0;
+                    instance.path = lineSegments[Math.floor(Math.random() * lineSegments.length)];
+                }
+
+                const currentPos = new THREE.Vector3().lerpVectors(instance.path.start, instance.path.end, instance.progress);
+                positions[i * 3] = currentPos.x;
+                positions[i * 3 + 1] = currentPos.y;
+                positions[i * 3 + 2] = currentPos.z;
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
+            
+            // Rotate the whole scene slightly
+            scene.rotation.y += 0.0001;
+
             renderer.render(scene, camera);
         };
 
@@ -251,14 +320,13 @@ const BackgroundAnimation = () => {
 
         return () => {
             window.removeEventListener('resize', onWindowResize);
-            document.removeEventListener('mousemove', onMouseMove);
             if(mount && renderer.domElement){
                 mount.removeChild(renderer.domElement);
             }
         };
     }, []);
 
-    return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
+    return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10 bg-gray-900" />;
 };
 
 
