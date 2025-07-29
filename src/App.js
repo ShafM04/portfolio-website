@@ -185,7 +185,7 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
-// --- NEW: Background Animation Component (Circuit Theme) ---
+// --- Background Animation Component (Circuit Theme) ---
 const BackgroundAnimation = () => {
     const mountRef = useRef(null);
 
@@ -461,12 +461,12 @@ const HeroSection = ({ onLinkClick }) => (
     </section>
 );
 
-// --- Skills Details Component ---
+// --- Skills Details Component (Corrected) ---
 const SkillsDetails = () => {
     const [markdown, setMarkdown] = useState('');
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Fetch the markdown file from the public directory
         fetch('/skills.md')
             .then(response => {
                 if (!response.ok) {
@@ -474,19 +474,32 @@ const SkillsDetails = () => {
                 }
                 return response.text();
             })
-            .then(text => setMarkdown(text))
-            .catch(error => console.error('Error fetching skills.md:', error));
+            .then(text => {
+                setMarkdown(text);
+                setLoading(false);
+            })
+            .catch(error => {
+                console.error('Error fetching skills.md:', error);
+                setMarkdown('Failed to load skill details.');
+                setLoading(false);
+            });
     }, []);
 
+    const containerClasses = "prose prose-invert prose-lg max-w-none bg-gray-800/50 rounded-lg shadow-xl p-8 md:p-12 border border-gray-700/50 mt-12";
+
+    if (loading) {
+        return <div className={containerClasses}><p>Loading...</p></div>;
+    }
+
     return (
-        <div className="prose prose-invert prose-lg max-w-none bg-gray-800/50 rounded-lg shadow-xl p-8 md:p-12 border border-gray-700/50 mt-12">
+        <div className={containerClasses}>
             <ReactMarkdown>{markdown}</ReactMarkdown>
         </div>
     );
 };
 
 
-// --- About Section ---
+// --- About Section (Corrected) ---
 const AboutSection = () => {
   const [showDetails, setShowDetails] = useState(false);
   return (
@@ -532,9 +545,7 @@ const AboutSection = () => {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.5, ease: "easeInOut" }}
                 >
-                    <Suspense fallback={<div>Loading...</div>}>
-                        <SkillsDetails />
-                    </Suspense>
+                    <SkillsDetails />
                 </motion.div>
             )}
         </AnimatePresence>
