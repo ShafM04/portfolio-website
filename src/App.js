@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import * as THREE from 'three';
@@ -194,6 +194,7 @@ const BackgroundAnimation = () => {
         let scene, camera, renderer;
         let particles, lines;
         const particleInstances = [];
+        let animationFrameId;
 
         const init = () => {
             // Scene and Camera
@@ -203,6 +204,7 @@ const BackgroundAnimation = () => {
 
             // Renderer
             renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             mount.appendChild(renderer.domElement);
 
@@ -228,7 +230,7 @@ const BackgroundAnimation = () => {
                     const p1 = points[i];
                     const p2 = points[j];
                     const distance = p1.distanceTo(p2);
-                    if (distance < spacing * 1.5) {
+                    if (distance < spacing * 1.5 && Math.random() > 0.85) { // Reduce line density
                         lineSegments.push({ start: p1, end: p2 });
                     }
                 }
@@ -269,13 +271,15 @@ const BackgroundAnimation = () => {
             scene.add(particles);
 
             // Initialize particle instances
-            for (let i = 0; i < particleCount; i++) {
-                const path = lineSegments[Math.floor(Math.random() * lineSegments.length)];
-                particleInstances.push({
-                    path,
-                    progress: Math.random(),
-                    speed: Math.random() * 0.002 + 0.001,
-                });
+            if (lineSegments.length > 0) {
+                for (let i = 0; i < particleCount; i++) {
+                    const path = lineSegments[Math.floor(Math.random() * lineSegments.length)];
+                    particleInstances.push({
+                        path,
+                        progress: Math.random(),
+                        speed: Math.random() * 0.002 + 0.001,
+                    });
+                }
             }
 
             // Event Listeners
@@ -290,25 +294,27 @@ const BackgroundAnimation = () => {
         };
 
         const animate = () => {
-            requestAnimationFrame(animate);
+            animationFrameId = requestAnimationFrame(animate);
 
             // Animate particles
-            const positions = particles.geometry.attributes.position.array;
-            for (let i = 0; i < particleInstances.length; i++) {
-                const instance = particleInstances[i];
-                instance.progress += instance.speed;
+            if (particleInstances.length > 0) {
+                const positions = particles.geometry.attributes.position.array;
+                for (let i = 0; i < particleInstances.length; i++) {
+                    const instance = particleInstances[i];
+                    instance.progress += instance.speed;
 
-                if (instance.progress >= 1) {
-                    instance.progress = 0;
-                    instance.path = lineSegments[Math.floor(Math.random() * lineSegments.length)];
+                    if (instance.progress >= 1) {
+                        instance.progress = 0;
+                        instance.path = lineSegments[Math.floor(Math.random() * lineSegments.length)];
+                    }
+
+                    const currentPos = new THREE.Vector3().lerpVectors(instance.path.start, instance.path.end, instance.progress);
+                    positions[i * 3] = currentPos.x;
+                    positions[i * 3 + 1] = currentPos.y;
+                    positions[i * 3 + 2] = currentPos.z;
                 }
-
-                const currentPos = new THREE.Vector3().lerpVectors(instance.path.start, instance.path.end, instance.progress);
-                positions[i * 3] = currentPos.x;
-                positions[i * 3 + 1] = currentPos.y;
-                positions[i * 3 + 2] = currentPos.z;
+                particles.geometry.attributes.position.needsUpdate = true;
             }
-            particles.geometry.attributes.position.needsUpdate = true;
             
             // Rotate the whole scene slightly
             scene.rotation.y += 0.0001;
@@ -320,13 +326,14 @@ const BackgroundAnimation = () => {
 
         return () => {
             window.removeEventListener('resize', onWindowResize);
+            cancelAnimationFrame(animationFrameId);
             if(mount && renderer.domElement){
                 mount.removeChild(renderer.domElement);
             }
         };
     }, []);
 
-    return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10 bg-gray-900" />;
+    return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
 };
 
 
@@ -351,7 +358,7 @@ const AnimatedSection = ({ children, id }) => {
       }}
       initial="hidden"
       animate={controls}
-      className="min-h-screen container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col justify-center relative z-10"
+      className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col justify-center relative z-10"
     >
       {children}
     </motion.section>
