@@ -185,7 +185,7 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
-// --- NEW Background Animation Component (Circuit Board Theme) ---
+// --- NEW Background Animation Component (Inspired by Reference) ---
 const BackgroundAnimation = () => {
     const mountRef = useRef(null);
 
@@ -194,39 +194,35 @@ const BackgroundAnimation = () => {
         let scene, camera, renderer;
         let animationFrameId;
         const signals = [];
+        const risingParticles = [];
 
         const init = () => {
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-            camera.position.z = 100;
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 150;
 
             renderer = new THREE.WebGLRenderer({ alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
             mount.appendChild(renderer.domElement);
 
-            const GRID_SIZE = 30;
+            // --- Circuitry ---
+            const GRID_SIZE = 40; // Denser grid
             const CELL_SIZE = 15;
             const HALF_GRID = (GRID_SIZE * CELL_SIZE) / 2;
-
-            // Create traces
-            const traceMaterial = new THREE.LineBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.3 });
+            const traceMaterial = new THREE.LineBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.2 });
             const traceGroup = new THREE.Group();
 
-            for (let i = 0; i < 50; i++) { // 50 traces
+            for (let i = 0; i < 100; i++) { // Double the traces
                 const points = [];
                 let x = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
                 let y = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
                 points.push(new THREE.Vector3(x, y, 0));
 
-                for (let j = 0; j < Math.floor(Math.random() * 5) + 3; j++) { // 3 to 7 segments
-                    const length = (Math.floor(Math.random() * 5) + 2) * CELL_SIZE;
-                    if (Math.random() > 0.5) { // Move horizontally
-                        x += Math.random() > 0.5 ? length : -length;
-                    } else { // Move vertically
-                        y += Math.random() > 0.5 ? length : -length;
-                    }
-                    // Clamp to grid boundaries
+                for (let j = 0; j < Math.floor(Math.random() * 6) + 4; j++) {
+                    const length = (Math.floor(Math.random() * 6) + 2) * CELL_SIZE;
+                    if (Math.random() > 0.5) x += Math.random() > 0.5 ? length : -length;
+                    else y += Math.random() > 0.5 ? length : -length;
                     x = Math.max(-HALF_GRID, Math.min(HALF_GRID, x));
                     y = Math.max(-HALF_GRID, Math.min(HALF_GRID, y));
                     points.push(new THREE.Vector3(x, y, 0));
@@ -235,28 +231,47 @@ const BackgroundAnimation = () => {
                 const trace = new THREE.Line(geometry, traceMaterial);
                 traceGroup.add(trace);
 
-                // Add signals to some traces
-                if (Math.random() > 0.5 && points.length > 1) {
+                if (Math.random() > 0.6 && points.length > 1) {
                     signals.push({
                         points,
                         progress: Math.random(),
-                        speed: Math.random() * 0.005 + 0.002,
-                        particle: createSignalParticle()
+                        speed: Math.random() * 0.004 + 0.002,
+                        particle: createSignalParticle(0x00ffff, 1)
                     });
                 }
             }
             scene.add(traceGroup);
-
-            // Add signal particles to the scene
             signals.forEach(s => scene.add(s.particle));
+
+            // --- Rising Particles (from reference image) ---
+            const particleMaterial = new THREE.SpriteMaterial({
+                color: 0x00ffff,
+                blending: THREE.AdditiveBlending,
+                transparent: true,
+                opacity: 0.5
+            });
+
+            for (let i = 0; i < 300; i++) {
+                const particle = new THREE.Sprite(particleMaterial);
+                const x = Math.random() * 600 - 300;
+                const y = Math.random() * 600 - 300;
+                const z = Math.random() * -200;
+                particle.position.set(x, y, z);
+                particle.scale.set(0.5, Math.random() * 6 + 2, 1);
+                risingParticles.push({
+                    sprite: particle,
+                    speed: Math.random() * 0.3 + 0.1
+                });
+                scene.add(particle);
+            }
 
             window.addEventListener('resize', onWindowResize, false);
             animate();
         };
         
-        const createSignalParticle = () => {
-            const geometry = new THREE.SphereGeometry(0.8, 8, 8);
-            const material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+        const createSignalParticle = (color, size) => {
+            const geometry = new THREE.SphereGeometry(size, 8, 8);
+            const material = new THREE.MeshBasicMaterial({ color });
             return new THREE.Mesh(geometry, material);
         };
 
@@ -271,20 +286,13 @@ const BackgroundAnimation = () => {
 
             // Animate signals
             signals.forEach(signal => {
-                signal.progress += signal.speed;
-                if (signal.progress >= 1) {
-                    signal.progress = 0;
-                }
-
-                // Calculate total length of the path
+                signal.progress = (signal.progress + signal.speed) % 1;
                 let totalLength = 0;
                 for (let i = 0; i < signal.points.length - 1; i++) {
                     totalLength += signal.points[i].distanceTo(signal.points[i + 1]);
                 }
-
                 const currentDist = signal.progress * totalLength;
                 let accumulatedLength = 0;
-
                 for (let i = 0; i < signal.points.length - 1; i++) {
                     const segmentLength = signal.points[i].distanceTo(signal.points[i + 1]);
                     if (currentDist >= accumulatedLength && currentDist <= accumulatedLength + segmentLength) {
@@ -296,7 +304,14 @@ const BackgroundAnimation = () => {
                 }
             });
 
-            scene.rotation.z += 0.0001;
+            // Animate rising particles
+            risingParticles.forEach(p => {
+                p.sprite.position.y += p.speed;
+                if (p.sprite.position.y > 300) {
+                    p.sprite.position.y = -300;
+                }
+            });
+
             renderer.render(scene, camera);
         };
 
@@ -316,7 +331,7 @@ const BackgroundAnimation = () => {
 
 
 // --- Reusable Components ---
-const AnimatedSection = ({ children, id }) => {
+const AnimatedSection = ({ children, id, className = "" }) => {
   const controls = useAnimation();
   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true });
 
@@ -336,7 +351,7 @@ const AnimatedSection = ({ children, id }) => {
       }}
       initial="hidden"
       animate={controls}
-      className="container mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 relative z-10"
+      className={`container mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 relative z-10 ${className}`}
     >
       {children}
     </motion.section>
@@ -422,16 +437,28 @@ const MobileNav = ({ isOpen, onLinkClick, onMenuToggle }) => (
 
 // --- Hero Section ---
 const HeroSection = ({ onLinkClick }) => (
-    <AnimatedSection id="home">
-      <div className="text-center">
+    <AnimatedSection id="home" className="min-h-screen flex flex-col justify-center items-center">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className="z-20 relative p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-center z-20 relative p-4"
         >
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 tracking-tight">Shafayat Mustafa</h1>
-          <p className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto mb-8">
+          <h2 className="text-2xl md:text-3xl text-cyan-300 font-light mb-2" style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.5)' }}>
+            Gun World
+          </h2>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-8" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.7)' }}>
+            銃の世界
+          </h1>
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="text-center z-20 relative p-4 mt-8"
+        >
+          <h3 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 tracking-tight">Shafayat Mustafa</h3>
+          <p className="text-md md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             Final Year MEng Mechanical Engineering Student | Specialising in Computational Mechanics & Mechatronic Systems
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
@@ -443,7 +470,6 @@ const HeroSection = ({ onLinkClick }) => (
             </a>
           </div>
         </motion.div>
-      </div>
     </AnimatedSection>
 );
 
@@ -453,6 +479,7 @@ const SkillsDetails = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // IMPORTANT: For this to work, 'skills.md' MUST be in the 'public' folder of your project.
         fetch('/skills.md')
             .then(response => {
                 if (!response.ok) {
@@ -466,7 +493,7 @@ const SkillsDetails = () => {
             })
             .catch(error => {
                 console.error('Error fetching skills.md:', error);
-                setMarkdown('Failed to load skill details.');
+                setMarkdown('Failed to load skill details. Please ensure `skills.md` is in the `public` folder.');
                 setLoading(false);
             });
     }, []);
@@ -728,7 +755,7 @@ export default function App() {
         <ResumeSection />
         <ContactSection />
       </main>
-      <footer className="bg-gray-900 border-t border-gray-700/50 py-6 relative z-10">
+      <footer className="bg-gray-900/80 border-t border-gray-700/50 py-6 relative z-10">
         <div className="container mx-auto text-center text-gray-400 text-sm">
           <p>&copy; {new Date().getFullYear()} Shafayat Mustafa. All Rights Reserved.</p>
         </div>
