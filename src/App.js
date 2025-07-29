@@ -192,9 +192,12 @@ const BackgroundAnimation = () => {
     useEffect(() => {
         const mount = mountRef.current;
         let scene, camera, renderer;
-        let particles, lines;
+        let particles;
         const particleInstances = [];
         let animationFrameId;
+        
+        // --- CORRECTED: 'lineSegments' is now declared in a higher scope ---
+        let lineSegments = [];
 
         const init = () => {
             // Scene and Camera
@@ -212,8 +215,7 @@ const BackgroundAnimation = () => {
             const gridSize = 20;
             const spacing = 20;
             const points = [];
-            const lineSegments = [];
-
+            
             // Create grid points
             for (let i = 0; i < gridSize; i++) {
                 for (let j = 0; j < gridSize; j++) {
@@ -251,7 +253,7 @@ const BackgroundAnimation = () => {
             });
             lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
             const lineMaterial = new THREE.LineBasicMaterial({ color: 0x0055aa, transparent: true, opacity: 0.3 });
-            lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+            const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
             scene.add(lines);
 
             // Create moving particles (signals)
