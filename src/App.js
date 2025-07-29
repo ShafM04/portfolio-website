@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { Download, Mail, Linkedin, Github, X, Menu, ChevronsRight, Briefcase, BrainCircuit, Code, Cpu, Rocket } from 'lucide-react';
+import * as THREE from 'three';
+import ReactMarkdown from 'react-markdown';
+import { Download, Mail, Linkedin, Github, X, Menu, ChevronsRight, Briefcase, BrainCircuit, Code, Cpu, Rocket, ChevronDown } from 'lucide-react';
 
-// --- Project Data ---
+// --- Project Data (Restored) ---
 const projects = [
   {
     id: 1,
@@ -183,10 +185,87 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
+// --- Background Animation Component ---
+const BackgroundAnimation = () => {
+    const mountRef = useRef(null);
+
+    useEffect(() => {
+        const mount = mountRef.current;
+        let scene, camera, renderer, stars;
+        let mouseX = 0, mouseY = 0;
+
+        const init = () => {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 1;
+            camera.rotation.x = Math.PI / 2;
+
+            renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            mount.appendChild(renderer.domElement);
+
+            const starGeo = new THREE.BufferGeometry();
+            const starVertices = [];
+            for (let i = 0; i < 6000; i++) {
+                const x = (Math.random() - 0.5) * 2000;
+                const y = (Math.random() - 0.5) * 2000;
+                const z = (Math.random() - 0.5) * 2000;
+                starVertices.push(x, y, z);
+            }
+            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            
+            let starMaterial = new THREE.PointsMaterial({
+                color: 0xaaaaaa,
+                size: 0.7,
+            });
+
+            stars = new THREE.Points(starGeo, starMaterial);
+            scene.add(stars);
+
+            window.addEventListener('resize', onWindowResize, false);
+            document.addEventListener('mousemove', onMouseMove, false);
+            
+            animate();
+        };
+
+        const onWindowResize = () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+
+        const onMouseMove = (event) => {
+            mouseX = event.clientX - window.innerWidth / 2;
+            mouseY = event.clientY - window.innerHeight / 2;
+        };
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+            stars.position.x += mouseX * 0.000002;
+            stars.position.y -= mouseY * 0.000002;
+            stars.rotation.y += 0.0005; 
+            renderer.render(scene, camera);
+        };
+
+        init();
+
+        return () => {
+            window.removeEventListener('resize', onWindowResize);
+            document.removeEventListener('mousemove', onMouseMove);
+            if(mount && renderer.domElement){
+                mount.removeChild(renderer.domElement);
+            }
+        };
+    }, []);
+
+    return <div ref={mountRef} className="fixed top-0 left-0 w-full h-full -z-10" />;
+};
+
+
 // --- Reusable Components ---
 const AnimatedSection = ({ children, id }) => {
   const controls = useAnimation();
-  const { ref, inView } = useInView({ threshold: 0.2, triggerOnce: true });
+  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true });
 
   useEffect(() => {
     if (inView) {
@@ -204,7 +283,7 @@ const AnimatedSection = ({ children, id }) => {
       }}
       initial="hidden"
       animate={controls}
-      className="min-h-screen container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex flex-col justify-center"
+      className="min-h-screen container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col justify-center relative z-10"
     >
       {children}
     </motion.section>
@@ -224,7 +303,7 @@ const Header = ({ activeSection, onLinkClick, onMenuToggle }) => {
   }, []);
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${scrolled ? 'bg-[#111827]/80 backdrop-blur-sm shadow-lg border-b border-gray-700/50' : 'bg-transparent'}`}>
+    <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${scrolled ? 'bg-gray-900/80 backdrop-blur-sm shadow-lg border-b border-gray-700/50' : 'bg-transparent'}`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
@@ -256,8 +335,7 @@ const Header = ({ activeSection, onLinkClick, onMenuToggle }) => {
 };
 
 // --- Mobile Navigation ---
-const MobileNav = ({ isOpen, onLinkClick, onMenuToggle }) => {
-  return (
+const MobileNav = ({ isOpen, onLinkClick, onMenuToggle }) => (
      <AnimatePresence>
         {isOpen && (
             <motion.div
@@ -287,79 +365,62 @@ const MobileNav = ({ isOpen, onLinkClick, onMenuToggle }) => {
             </motion.div>
         )}
     </AnimatePresence>
-  );
-}
-
-// --- Animated Title Component ---
-const AnimatedTitle = ({ text }) => {
-  const container = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08, delayChildren: 0.2 }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { type: "spring", stiffness: 100 }
-    }
-  };
-
-  return (
-    <motion.h1
-      className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 tracking-tight"
-      variants={container}
-      initial="hidden"
-      animate="visible"
-    >
-      {text.split('').map((char, index) => (
-        <motion.span key={index} variants={item} style={{ display: 'inline-block' }}>
-          {char === ' ' ? '\u00A0' : char}
-        </motion.span>
-      ))}
-    </motion.h1>
-  );
-};
-
+);
 
 // --- Hero Section ---
-const HeroSection = ({ onLinkClick }) => {
-  return (
-    <section id="home" className="min-h-screen flex items-center justify-center text-center bg-gray-900 relative overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-20" style={{backgroundImage: 'url(https://www.transparenttextures.com/patterns/graphy.png)'}}></div>
-        <div className="absolute inset-0 z-0 bg-cover bg-center" style={{backgroundImage: `url(https://i.imgur.com/DTzLRi9.gif)`}}></div>
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent"></div>
-        <div className="absolute inset-0 z-10 bg-gradient-to-r from-gray-900 via-transparent to-gray-900"></div>
-
+const HeroSection = ({ onLinkClick }) => (
+    <section id="home" className="min-h-screen flex items-center justify-center text-center relative overflow-hidden">
+      <div className="absolute inset-0 z-10 bg-gradient-to-b from-gray-900/30 via-gray-900/80 to-gray-900"></div>
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8 }}
-        className="z-20 relative"
+        className="z-20 relative p-4"
       >
-        <AnimatedTitle text="Shafayat Mustafa" />
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 tracking-tight">Shafayat Mustafa</h1>
         <p className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto mb-8">
           Final Year MEng Mechanical Engineering Student | Specialising in Computational Mechanics & Mechatronic Systems
         </p>
-        <div className="flex justify-center space-x-4">
-          <a href="#projects" onClick={(e) => onLinkClick(e, '#projects')} className="bg-cyan-500 text-white font-bold py-3 px-8 rounded-full hover:bg-cyan-600 transition-transform duration-300 hover:scale-105 shadow-lg">
+        <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+          <a href="#projects" onClick={(e) => onLinkClick(e, '#projects')} className="bg-cyan-500 text-white font-bold py-3 px-8 rounded-full hover:bg-cyan-600 transition-transform duration-300 hover:scale-105 shadow-lg w-full sm:w-auto">
             View My Projects
           </a>
-          <a href="https://drive.google.com/file/d/1ibd-7ItlAfNufxtluoJcxAAlGTv34Oh7/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="bg-gray-700 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-600 transition-transform duration-300 hover:scale-105 shadow-lg flex items-center">
+          <a href="https://drive.google.com/file/d/1ibd-7ItlAfNufxtluoJcxAAlGTv34Oh7/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="bg-gray-700 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-600 transition-transform duration-300 hover:scale-105 shadow-lg flex items-center justify-center w-full sm:w-auto">
             <Download className="mr-2" size={20} /> My CV
           </a>
         </div>
       </motion.div>
     </section>
-  );
+);
+
+// --- Skills Details Component ---
+const SkillsDetails = () => {
+    const [markdown, setMarkdown] = useState('');
+
+    useEffect(() => {
+        // Fetch the markdown file from the public directory
+        fetch('/skills.md')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(text => setMarkdown(text))
+            .catch(error => console.error('Error fetching skills.md:', error));
+    }, []);
+
+    return (
+        <div className="prose prose-invert prose-lg max-w-none bg-gray-800/50 rounded-lg shadow-xl p-8 md:p-12 border border-gray-700/50 mt-12">
+            <ReactMarkdown>{markdown}</ReactMarkdown>
+        </div>
+    );
 };
+
 
 // --- About Section ---
 const AboutSection = () => {
+  const [showDetails, setShowDetails] = useState(false);
   return (
     <AnimatedSection id="about">
       <h2 className="text-4xl font-bold text-white text-center mb-12">About Me</h2>
@@ -375,7 +436,6 @@ const AboutSection = () => {
         </div>
         <div className="md:col-span-2 flex justify-center">
           <div className="w-64 h-64 rounded-full overflow-hidden shadow-2xl border-4 border-cyan-500/50">
-             {/* <-- REPLACE THIS URL with your own hosted image link */}
             <img src="https://placehold.co/400x400/e2e8f0/111827?text=SM" alt="Shafayat Mustafa" className="w-full h-full object-cover" />
           </div>
         </div>
@@ -391,36 +451,108 @@ const AboutSection = () => {
             </motion.div>
           ))}
         </div>
+        <div className="text-center mt-12">
+            <button onClick={() => setShowDetails(!showDetails)} className="inline-flex items-center bg-gray-700 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-600 transition-transform duration-300 hover:scale-105 shadow-lg">
+                {showDetails ? 'Hide Details' : 'Show More Details'} <ChevronDown className={`ml-2 transition-transform ${showDetails ? 'rotate-180' : ''}`} size={20} />
+            </button>
+        </div>
+        <AnimatePresence>
+            {showDetails && (
+                <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                >
+                    <Suspense fallback={<div>Loading...</div>}>
+                        <SkillsDetails />
+                    </Suspense>
+                </motion.div>
+            )}
+        </AnimatePresence>
       </div>
     </AnimatedSection>
   );
 };
 
+// --- Project Card Component ---
+const ProjectCard = ({ project }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <motion.div layout className="rounded-lg overflow-hidden shadow-2xl bg-gray-800 border border-gray-700/50 transition-colors duration-300 hover:border-cyan-500/50">
+            <motion.div layout="position" className="cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+                <div className="h-64 bg-gray-900 flex items-center justify-center">
+                    <img src={project.imageUrl} alt={project.title} className="w-full h-full object-contain" />
+                </div>
+                <div className="p-6">
+                    <span className="text-sm text-cyan-400 font-semibold">{project.category}</span>
+                    <h3 className="text-2xl font-bold text-white mt-1">{project.title}</h3>
+                    <p className="text-gray-300 mt-2 text-sm max-w-md">{project.summary}</p>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                        {project.tools.map(tool => (
+                            <span key={tool} className="bg-cyan-400/20 text-cyan-300 text-xs font-bold px-3 py-1.5 rounded-full">{tool}</span>
+                        ))}
+                    </div>
+                     <div className="mt-4 flex items-center text-cyan-400 font-semibold">
+                        <span>{isOpen ? 'Hide' : 'View'} Details</span>
+                        <ChevronDown className={`ml-2 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} size={20} />
+                    </div>
+                </div>
+            </motion.div>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        layout
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                    >
+                        <div className="p-6 border-t border-gray-700">
+                            <h2 className="text-2xl md:text-3xl font-bold mt-2 mb-4">{project.details.headline}</h2>
+                            <p className="text-gray-300 mb-8 leading-relaxed">{project.details.description}</p>
+                            
+                            <h3 className="text-xl font-bold text-white mb-4">Challenges & Solutions</h3>
+                            {project.details.challenges.map((challenge, index) => (
+                                <div key={index} className="mb-6 bg-gray-800/50 p-4 rounded-lg border border-gray-700/50">
+                                <h4 className="font-semibold text-cyan-400 text-lg mb-2">{challenge.title}</h4>
+                                <p className="text-gray-300 text-sm mb-2"><strong className="text-gray-100">The Challenge:</strong> {challenge.text}</p>
+                                <p className="text-gray-300 text-sm"><strong className="text-gray-100">My Solution:</strong> {challenge.solution}</p>
+                                </div>
+                            ))}
+
+                            {project.details.visuals && project.details.visuals.length > 0 && (
+                                <>
+                                    <h3 className="text-xl font-bold text-white mt-8 mb-4">Key Visuals</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                                        {project.details.visuals.map((src, index) => (
+                                            <img key={index} src={src} alt={`Project visual ${index + 1}`} className="w-full h-auto rounded-md shadow-lg object-cover" />
+                                        ))}
+                                    </div>
+                                </>
+                            )}
+                            
+                            <h3 className="text-xl font-bold text-white mt-8 mb-4">Outcome</h3>
+                            <p className="text-gray-300 leading-relaxed">{project.details.outcome}</p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    );
+};
+
 // --- Projects Section ---
-const ProjectsSection = ({ onProjectClick }) => {
+const ProjectsSection = () => {
   return (
     <AnimatedSection id="projects">
       <h2 className="text-4xl font-bold text-white text-center mb-12">Projects</h2>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+      <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-10">
         {projects.map((project) => (
-          <motion.div
-            key={project.id}
-            className="group relative rounded-lg overflow-hidden shadow-2xl cursor-pointer border border-gray-700/50 hover:border-cyan-500/50 transition-colors duration-300"
-            onClick={() => onProjectClick(project)}
-            whileHover={{ y: -10 }}
-            transition={{ type: 'spring', stiffness: 300 }}
-          >
-            <img src={project.imageUrl} alt={project.title} className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-110" style={{ imageRendering: 'crisp-edges' }} />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 to-transparent"></div>
-            <div className="absolute bottom-0 left-0 p-6">
-              <span className="text-sm text-cyan-400 font-semibold">{project.category}</span>
-              <h3 className="text-2xl font-bold text-white mt-1">{project.title}</h3>
-              <p className="text-gray-300 mt-2 text-sm max-w-md">{project.summary}</p>
-               <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <span className="text-white font-bold inline-block">View Details &rarr;</span>
-              </div>
-            </div>
-          </motion.div>
+          <ProjectCard key={project.id} project={project} />
         ))}
       </div>
     </AnimatedSection>
@@ -428,8 +560,7 @@ const ProjectsSection = ({ onProjectClick }) => {
 };
 
 // --- Resume Section ---
-const ResumeSection = () => {
-  return (
+const ResumeSection = () => (
     <AnimatedSection id="resume">
       <h2 className="text-4xl font-bold text-white text-center mb-12">Resume / CV</h2>
       <div className="max-w-4xl mx-auto bg-gray-800/50 rounded-lg shadow-xl p-8 md:p-12 border border-gray-700/50">
@@ -456,112 +587,36 @@ const ResumeSection = () => {
         </div>
       </div>
     </AnimatedSection>
-  );
-};
+);
 
 // --- Contact Section ---
-const ContactSection = () => {
-    return (
-        <AnimatedSection id="contact">
-            <h2 className="text-4xl font-bold text-white text-center mb-4">Get In Touch</h2>
-            <p className="text-gray-300 text-center max-w-2xl mx-auto mb-12">
-                I am always open to discussing new opportunities or interesting engineering challenges. Please feel free to reach out.
-            </p>
-            <div className="flex flex-col md:flex-row justify-center items-center gap-8">
-                <a href="mailto:shafayat.mustafa.portfolio@email.com" className="flex items-center text-lg text-gray-200 hover:text-cyan-400 transition-colors duration-300">
-                    <Mail className="mr-3 text-cyan-400" size={24} />
-                    shafayat.mustafa.portfolio@email.com
-                </a>
-                <a href="https://www.linkedin.com/in/shafayat-mustafa/" target="_blank" rel="noopener noreferrer" className="flex items-center text-lg text-gray-200 hover:text-cyan-400 transition-colors duration-300">
-                    <Linkedin className="mr-3 text-cyan-400" size={24} />
-                    LinkedIn Profile
-                </a>
-                 <a href="https://github.com/ShafM04" target="_blank" rel="noopener noreferrer" className="flex items-center text-lg text-gray-200 hover:text-cyan-400 transition-colors duration-300">
-                    <Github className="mr-3 text-cyan-400" size={24} />
-                    GitHub Profile
-                </a>
-            </div>
-        </AnimatedSection>
-    );
-};
-
-// --- Project Modal ---
-const ProjectModal = ({ project, onClose }) => {
-    if (!project) return null;
-
-    return (
-        <AnimatePresence>
-            <motion.div 
-                className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" 
-                onClick={onClose}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-            >
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-gray-900 text-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative border border-gray-700/50"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <button onClick={onClose} className="sticky top-4 right-4 float-right text-gray-400 hover:text-white z-10 bg-gray-900 rounded-full p-1">
-                        <X size={28} />
-                    </button>
-                    <div className="h-64 md:h-80 bg-cover bg-center" style={{ backgroundImage: `url(${project.imageUrl})` }}></div>
-                    <div className="p-6 md:p-10">
-                        <span className="text-sm font-semibold text-cyan-400">{project.category}</span>
-                        <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-4">{project.details.headline}</h2>
-                        <p className="text-gray-300 mb-8 leading-relaxed">{project.details.description}</p>
-                        
-                        <h3 className="text-2xl font-bold text-white mb-4">Challenges & Solutions</h3>
-                        {project.details.challenges.map((challenge, index) => (
-                            <div key={index} className="mb-6 bg-gray-800/50 p-4 rounded-lg border border-gray-700/50">
-                            <h4 className="font-semibold text-cyan-400 text-lg mb-2">{challenge.title}</h4>
-                            <p className="text-gray-300 text-sm mb-2"><strong className="text-gray-100">The Challenge:</strong> {challenge.text}</p>
-                            <p className="text-gray-300 text-sm"><strong className="text-gray-100">My Solution:</strong> {challenge.solution}</p>
-                            </div>
-                        ))}
-
-                        <h3 className="text-2xl font-bold text-white mt-8 mb-4">Key Visuals</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                            {project.details.visuals.map((src, index) => (
-                                <img key={index} src={src} alt={`Project visual ${index + 1}`} className="w-full h-auto rounded-md shadow-lg object-cover" style={{ imageRendering: 'crisp-edges' }} />
-                            ))}
-                        </div>
-
-                        <h3 className="text-2xl font-bold text-white mt-8 mb-4">Tools Used</h3>
-                        <div className="flex flex-wrap gap-3 mb-8">
-                            {project.tools.map(tool => (
-                                <span key={tool} className="bg-cyan-400/20 text-cyan-300 text-xs font-bold px-3 py-1.5 rounded-full">{tool}</span>
-                            ))}
-                        </div>
-
-                        <h3 className="text-2xl font-bold text-white mt-8 mb-4">Outcome</h3>
-                        <p className="text-gray-300 leading-relaxed">{project.details.outcome}</p>
-                    </div>
-                </motion.div>
-            </motion.div>
-        </AnimatePresence>
-    );
-};
-
+const ContactSection = () => (
+    <AnimatedSection id="contact">
+        <h2 className="text-4xl font-bold text-white text-center mb-4">Get In Touch</h2>
+        <p className="text-gray-300 text-center max-w-2xl mx-auto mb-12">
+            I am always open to discussing new opportunities or interesting engineering challenges. Please feel free to reach out.
+        </p>
+        <div className="flex flex-col md:flex-row justify-center items-center gap-8">
+            <a href="mailto:shafayat.mustafa.portfolio@email.com" className="flex items-center text-lg text-gray-200 hover:text-cyan-400 transition-colors duration-300">
+                <Mail className="mr-3 text-cyan-400" size={24} />
+                shafayat.mustafa.portfolio@email.com
+            </a>
+            <a href="https://www.linkedin.com/in/shafayat-mustafa/" target="_blank" rel="noopener noreferrer" className="flex items-center text-lg text-gray-200 hover:text-cyan-400 transition-colors duration-300">
+                <Linkedin className="mr-3 text-cyan-400" size={24} />
+                LinkedIn Profile
+            </a>
+             <a href="https://github.com/ShafM04" target="_blank" rel="noopener noreferrer" className="flex items-center text-lg text-gray-200 hover:text-cyan-400 transition-colors duration-300">
+                <Github className="mr-3 text-cyan-400" size={24} />
+                GitHub Profile
+            </a>
+        </div>
+    </AnimatedSection>
+);
 
 // --- Main App Component ---
 export default function App() {
   const [activeSection, setActiveSection] = useState('home');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const sectionRefs = {
-    home: useRef(null),
-    about: useRef(null),
-    projects: useRef(null),
-    resume: useRef(null),
-    contact: useRef(null),
-  };
 
   useEffect(() => {
     const observerOptions = {
@@ -570,74 +625,45 @@ export default function App() {
       threshold: 0.5,
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    const observerCallback = (entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           setActiveSection(entry.target.id);
         }
       });
-    }, observerOptions);
+    };
 
-    const refs = Object.values(sectionRefs);
-    const elements = refs.map(ref => document.getElementById(ref.current)).filter(Boolean);
-
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    const elements = Object.values(navLinks).map(link => document.querySelector(link.href)).filter(Boolean);
     elements.forEach(el => observer.observe(el));
 
     return () => {
-      elements.forEach(el => observer.unobserve(el));
+      elements.forEach(el => el && observer.unobserve(el));
     };
   }, []);
-  
-  useEffect(() => {
-    if (modalOpen) {
-        document.body.style.overflow = 'hidden';
-    } else {
-        document.body.style.overflow = 'auto';
-    }
-  }, [modalOpen]);
 
   const handleLinkClick = (e, href) => {
     e.preventDefault();
-    document.querySelector(href).scrollIntoView({ behavior: 'smooth' });
-  };
-  
-  const handleProjectClick = (project) => {
-    setSelectedProject(project);
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedProject(null);
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
   };
   
   const handleMenuToggle = () => {
       setMenuOpen(!menuOpen);
   };
 
-  // Assign refs
-  useEffect(() => {
-    sectionRefs.home.current = "home";
-    sectionRefs.about.current = "about";
-    sectionRefs.projects.current = "projects";
-    sectionRefs.resume.current = "resume";
-    sectionRefs.contact.current = "contact";
-  }, []);
-
-
   return (
-    <div className="bg-gray-900 text-white font-sans">
+    <div className="bg-gray-900 text-white font-sans relative">
+      <BackgroundAnimation />
       <Header activeSection={activeSection} onLinkClick={handleLinkClick} onMenuToggle={handleMenuToggle} />
       <MobileNav isOpen={menuOpen} onLinkClick={handleLinkClick} onMenuToggle={handleMenuToggle} />
       <main>
         <HeroSection onLinkClick={handleLinkClick} />
         <AboutSection />
-        <ProjectsSection onProjectClick={handleProjectClick} />
+        <ProjectsSection />
         <ResumeSection />
         <ContactSection />
       </main>
-      <ProjectModal project={selectedProject} onClose={handleCloseModal} />
-      <footer className="bg-gray-900 border-t border-gray-700/50 py-6">
+      <footer className="bg-gray-900 border-t border-gray-700/50 py-6 relative z-10">
         <div className="container mx-auto text-center text-gray-400 text-sm">
           <p>&copy; {new Date().getFullYear()} Shafayat Mustafa. All Rights Reserved.</p>
         </div>
