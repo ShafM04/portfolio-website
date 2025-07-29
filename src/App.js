@@ -185,7 +185,7 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
-// --- NEW Background Animation Component (Inspired by Reference) ---
+// --- Background Animation Component (Updated) ---
 const BackgroundAnimation = () => {
     const mountRef = useRef(null);
 
@@ -207,20 +207,20 @@ const BackgroundAnimation = () => {
             mount.appendChild(renderer.domElement);
 
             // --- Circuitry ---
-            const GRID_SIZE = 40; // Denser grid
+            const GRID_SIZE = 30; // Reduced Grid Size
             const CELL_SIZE = 15;
             const HALF_GRID = (GRID_SIZE * CELL_SIZE) / 2;
             const traceMaterial = new THREE.LineBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.2 });
             const traceGroup = new THREE.Group();
 
-            for (let i = 0; i < 100; i++) { // Double the traces
+            for (let i = 0; i < 50; i++) { // Reduced number of traces
                 const points = [];
                 let x = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
                 let y = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
                 points.push(new THREE.Vector3(x, y, 0));
 
-                for (let j = 0; j < Math.floor(Math.random() * 6) + 4; j++) {
-                    const length = (Math.floor(Math.random() * 6) + 2) * CELL_SIZE;
+                for (let j = 0; j < Math.floor(Math.random() * 5) + 3; j++) {
+                    const length = (Math.floor(Math.random() * 5) + 2) * CELL_SIZE;
                     if (Math.random() > 0.5) x += Math.random() > 0.5 ? length : -length;
                     else y += Math.random() > 0.5 ? length : -length;
                     x = Math.max(-HALF_GRID, Math.min(HALF_GRID, x));
@@ -231,7 +231,7 @@ const BackgroundAnimation = () => {
                 const trace = new THREE.Line(geometry, traceMaterial);
                 traceGroup.add(trace);
 
-                if (Math.random() > 0.6 && points.length > 1) {
+                if (Math.random() > 0.5 && points.length > 1) {
                     signals.push({
                         points,
                         progress: Math.random(),
@@ -243,7 +243,7 @@ const BackgroundAnimation = () => {
             scene.add(traceGroup);
             signals.forEach(s => scene.add(s.particle));
 
-            // --- Rising Particles (from reference image) ---
+            // --- Rising Particles ---
             const particleMaterial = new THREE.SpriteMaterial({
                 color: 0x00ffff,
                 blending: THREE.AdditiveBlending,
@@ -251,7 +251,7 @@ const BackgroundAnimation = () => {
                 opacity: 0.5
             });
 
-            for (let i = 0; i < 300; i++) {
+            for (let i = 0; i < 200; i++) { // Reduced particle count
                 const particle = new THREE.Sprite(particleMaterial);
                 const x = Math.random() * 600 - 300;
                 const y = Math.random() * 600 - 300;
@@ -284,7 +284,6 @@ const BackgroundAnimation = () => {
         const animate = () => {
             animationFrameId = requestAnimationFrame(animate);
 
-            // Animate signals
             signals.forEach(signal => {
                 signal.progress = (signal.progress + signal.speed) % 1;
                 let totalLength = 0;
@@ -304,7 +303,6 @@ const BackgroundAnimation = () => {
                 }
             });
 
-            // Animate rising particles
             risingParticles.forEach(p => {
                 p.sprite.position.y += p.speed;
                 if (p.sprite.position.y > 300) {
@@ -435,7 +433,7 @@ const MobileNav = ({ isOpen, onLinkClick, onMenuToggle }) => (
     </AnimatePresence>
 );
 
-// --- Hero Section ---
+// --- Hero Section (Updated) ---
 const HeroSection = ({ onLinkClick }) => (
     <AnimatedSection id="home" className="min-h-screen flex flex-col justify-center items-center">
         <motion.div 
@@ -444,20 +442,9 @@ const HeroSection = ({ onLinkClick }) => (
           transition={{ duration: 0.8, delay: 0.2 }}
           className="text-center z-20 relative p-4"
         >
-          <h2 className="text-2xl md:text-3xl text-cyan-300 font-light mb-2" style={{ textShadow: '0 0 8px rgba(0, 255, 255, 0.5)' }}>
-            Gun World
-          </h2>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-8" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.7)' }}>
-            銃の世界
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-4" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.7)' }}>
+            Shafayat Mustafa
           </h1>
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="text-center z-20 relative p-4 mt-8"
-        >
-          <h3 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-white mb-4 tracking-tight">Shafayat Mustafa</h3>
           <p className="text-md md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             Final Year MEng Mechanical Engineering Student | Specialising in Computational Mechanics & Mechatronic Systems
           </p>
@@ -473,13 +460,12 @@ const HeroSection = ({ onLinkClick }) => (
     </AnimatedSection>
 );
 
-// --- Skills Details Component (Corrected) ---
+// --- Skills Details Component ---
 const SkillsDetails = () => {
     const [markdown, setMarkdown] = useState('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // IMPORTANT: For this to work, 'skills.md' MUST be in the 'public' folder of your project.
         fetch('/skills.md')
             .then(response => {
                 if (!response.ok) {
@@ -512,7 +498,7 @@ const SkillsDetails = () => {
 };
 
 
-// --- About Section (Corrected) ---
+// --- About Section ---
 const AboutSection = () => {
   const [showDetails, setShowDetails] = useState(false);
   return (
