@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import ReactMarkdown from 'react-markdown';
 import Latex from 'react-latex-next';
 import 'katex/dist/katex.min.css';
-import { Download, Mail, Linkedin, Github, X, Menu, ChevronsRight, Briefcase, BrainCircuit, Code, Cpu, Rocket, ChevronDown } from 'lucide-react';
+import { Download, Mail, Linkedin, Github, X, Menu, ChevronsRight, Briefcase, BrainCircuit, Code, Cpu, Rocket, ChevronDown, Swords } from 'lucide-react';
 
 // --- Project Data (Updated) ---
 const projects = [
@@ -262,6 +262,7 @@ const navLinks = [
   { name: "About", href: "#about" },
   { name: "Projects", href: "#projects" },
   { name: "Resume", href: "#resume" },
+  { name: "Game", href: "#game" },
   { name: "Contact", href: "#contact" },
 ];
 
@@ -799,6 +800,112 @@ const ResumeSection = () => (
     </AnimatedSection>
 );
 
+// --- NEW Game Section ---
+const GameSection = () => {
+    const [gameState, setGameState] = useState({
+        score: 0,
+        timeLeft: 30,
+        isActive: false,
+        targets: []
+    });
+    const gameAreaRef = useRef(null);
+    const timerId = useRef(null);
+    const spawnerId = useRef(null);
+
+    const startGame = () => {
+        setGameState({
+            score: 0,
+            timeLeft: 30,
+            isActive: true,
+            targets: []
+        });
+    };
+
+    useEffect(() => {
+        if (gameState.isActive) {
+            timerId.current = setInterval(() => {
+                setGameState(prev => {
+                    if (prev.timeLeft <= 1) {
+                        clearInterval(timerId.current);
+                        clearInterval(spawnerId.current);
+                        return { ...prev, timeLeft: 0, isActive: false };
+                    }
+                    return { ...prev, timeLeft: prev.timeLeft - 1 };
+                });
+            }, 1000);
+
+            spawnerId.current = setInterval(() => {
+                const gameArea = gameAreaRef.current;
+                if (gameArea) {
+                    const newTarget = {
+                        id: Date.now(),
+                        x: Math.random() * (gameArea.offsetWidth - 50),
+                        y: Math.random() * (gameArea.offsetHeight - 50)
+                    };
+                    setGameState(prev => ({ ...prev, targets: [...prev.targets, newTarget] }));
+                }
+            }, 800);
+        }
+
+        return () => {
+            clearInterval(timerId.current);
+            clearInterval(spawnerId.current);
+        };
+    }, [gameState.isActive]);
+
+    const handleTargetClick = (id) => {
+        setGameState(prev => ({
+            ...prev,
+            score: prev.score + 1,
+            targets: prev.targets.filter(target => target.id !== id)
+        }));
+    };
+
+    return (
+        <AnimatedSection id="game">
+            <h2 className="text-4xl font-bold text-white text-center mb-4">Skill Connect Challenge</h2>
+            <p className="text-center text-gray-300 mb-8">Test your reaction speed! Click the targets as they appear.</p>
+            <div className="max-w-4xl mx-auto bg-slate-900/50 backdrop-blur-sm border border-cyan-400/20 rounded-lg shadow-xl p-8">
+                <div className="flex justify-around items-center mb-6 text-2xl font-bold">
+                    <div className="text-white">Score: <span className="text-cyan-400">{gameState.score}</span></div>
+                    <div className="text-white">Time: <span className="text-cyan-400">{gameState.timeLeft}</span></div>
+                </div>
+                <div 
+                    ref={gameAreaRef} 
+                    className="relative w-full h-96 bg-black/20 rounded-lg overflow-hidden border border-cyan-400/30"
+                >
+                    <AnimatePresence>
+                        {gameState.isActive && gameState.targets.map(target => (
+                            <motion.div
+                                key={target.id}
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute w-12 h-12 rounded-full bg-cyan-400/50 border-2 border-cyan-300 cursor-pointer shadow-[0_0_15px_rgba(0,255,255,0.7)]"
+                                style={{ left: target.x, top: target.y }}
+                                onClick={() => handleTargetClick(target.id)}
+                            />
+                        ))}
+                    </AnimatePresence>
+                </div>
+                <div className="text-center mt-6">
+                    {!gameState.isActive && (
+                        <button 
+                            onClick={startGame}
+                            className="inline-flex items-center bg-cyan-500 text-white font-bold py-3 px-8 rounded-full hover:bg-cyan-600 transition-transform duration-300 hover:scale-105 shadow-lg"
+                        >
+                            <Swords className="mr-2" />
+                            {gameState.timeLeft === 0 ? 'Play Again' : 'Start Game'}
+                        </button>
+                    )}
+                </div>
+            </div>
+        </AnimatedSection>
+    );
+};
+
+
 // --- Contact Section ---
 const ContactSection = () => (
     <AnimatedSection id="contact">
@@ -896,6 +1003,7 @@ export default function App() {
                 <AboutSection />
                 <ProjectsSection />
                 <ResumeSection />
+                <GameSection />
                 <ContactSection />
             </main>
             <footer className="bg-slate-900/50 backdrop-blur-sm border-t border-cyan-400/20 py-6 relative z-10">
