@@ -318,7 +318,7 @@ const BackgroundAnimation = ({ scrollProgress }) => {
 
             const color1 = new THREE.Color("#0a0a1a"); // Dark blue
             const color2 = new THREE.Color("#00334d"); // Dark turquoise
-            const color3 = new THREE.Color("#4DB8FF"); // Light Sky Blue
+            const color3 = new THREE.Color("#004c7d"); // Darker Sky Blue
             const currentColor = new THREE.Color();
 
             if (scrollProgress < 0.5) {
