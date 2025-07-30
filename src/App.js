@@ -185,7 +185,7 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
-// --- Background Animation Component (Updated with Scroll Transition) ---
+// --- Background Animation Component (Updated with 3-Stage Scroll Transition) ---
 const BackgroundAnimation = ({ scrollProgress }) => {
     const mountRef = useRef(null);
     const sceneRef = useRef(null);
@@ -242,10 +242,10 @@ const BackgroundAnimation = ({ scrollProgress }) => {
         }
         scene.add(circuitGroup);
 
-        // --- Scene 2: Turquoise Streaks ---
+        // --- Scene 2: Streaks ---
         const streaksGroup = new THREE.Group();
         materialsRef.current.streak = new THREE.SpriteMaterial({
-            color: 0x99ffff, // Changed from red to light turquoise
+            color: 0xE0FFFF, // Light Cyan for good contrast
             blending: THREE.AdditiveBlending,
             transparent: true,
             opacity: 0
@@ -273,7 +273,6 @@ const BackgroundAnimation = ({ scrollProgress }) => {
         const animate = () => {
             animationFrameIdRef.current = requestAnimationFrame(animate);
             
-            // Animate signals
             signals.forEach(signal => {
                 signal.progress = (signal.progress + signal.speed) % 1;
                 let totalLength = 0;
@@ -291,7 +290,6 @@ const BackgroundAnimation = ({ scrollProgress }) => {
                 }
             });
 
-            // Animate streaks
             streaks.forEach(p => {
                 p.sprite.position.x += p.speed;
                 if (p.sprite.position.x > 400) p.sprite.position.x = -400;
@@ -310,21 +308,27 @@ const BackgroundAnimation = ({ scrollProgress }) => {
         };
     }, []);
 
-    // This effect handles the smooth transition based on scroll
     useEffect(() => {
         const { trace, signal, streak } = materialsRef.current;
         if (trace && signal && streak) {
-            // Fade out circuit
-            trace.opacity = Math.max(0, 0.2 * (1 - scrollProgress * 2));
-            signal.opacity = Math.max(0, 1 * (1 - scrollProgress * 2));
-            
-            // Fade in streaks
+            const circuitOpacity = Math.max(0, 1 - scrollProgress * 2);
+            trace.opacity = circuitOpacity * 0.2;
+            signal.opacity = circuitOpacity;
             streak.opacity = Math.min(0.7, scrollProgress * 1.5);
 
-            // Interpolate background color
-            const startColor = new THREE.Color("#0a0a1a"); // Dark blue
-            const endColor = new THREE.Color("#00334d"); // Dark turquoise
-            const currentColor = new THREE.Color().lerpColors(startColor, endColor, scrollProgress);
+            const color1 = new THREE.Color("#0a0a1a"); // Dark blue
+            const color2 = new THREE.Color("#00334d"); // Dark turquoise
+            const color3 = new THREE.Color("#4DB8FF"); // Light Sky Blue
+            const currentColor = new THREE.Color();
+
+            if (scrollProgress < 0.5) {
+                const progress = scrollProgress * 2;
+                currentColor.lerpColors(color1, color2, progress);
+            } else {
+                const progress = (scrollProgress - 0.5) * 2;
+                currentColor.lerpColors(color2, color3, progress);
+            }
+
             if (rendererRef.current) {
                 rendererRef.current.setClearColor(currentColor, 1);
             }
