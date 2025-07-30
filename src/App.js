@@ -317,7 +317,7 @@ const BackgroundAnimation = ({ scrollProgress }) => {
             streak.opacity = Math.min(0.7, scrollProgress * 1.5);
 
             const color1 = new THREE.Color("#0a0a1a"); // Dark blue
-            const color2 = new THREE.Color("#004c7d"); // Darker Sky Blue
+            const color2 = new THREE.Color("#003366"); // Lighter Dark Blue
             const color3 = new THREE.Color("#00334d"); // Dark turquoise
             const currentColor = new THREE.Color();
 
@@ -495,7 +495,7 @@ const SkillsDetails = () => {
             });
     }, []);
 
-    const containerClasses = "prose prose-invert prose-lg max-w-none bg-gray-800/50 rounded-lg shadow-xl p-8 md:p-12 border border-gray-700/50 mt-12";
+    const containerClasses = "prose prose-invert prose-lg max-w-none bg-slate-900/50 backdrop-blur-sm border border-cyan-400/20 rounded-lg shadow-xl p-8 md:p-12 mt-12";
 
     if (loading) {
         return <div className={containerClasses}><p>Loading...</p></div>;
@@ -535,7 +535,7 @@ const AboutSection = () => {
         <h3 className="text-3xl font-bold text-white text-center mb-10">Technical Skills</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 text-center">
           {skills.map((skill) => (
-            <motion.div key={skill.name} className="flex flex-col items-center p-4 bg-gray-800 rounded-lg shadow-md hover:shadow-cyan-500/20 hover:scale-105 transition-all duration-300 border border-gray-700/50" whileHover={{ y: -5 }}>
+            <motion.div key={skill.name} className="flex flex-col items-center p-4 bg-slate-900/50 backdrop-blur-sm border border-cyan-400/20 rounded-lg shadow-md hover:shadow-cyan-500/20 hover:scale-105 transition-all duration-300" whileHover={{ y: -5 }}>
               <skill.icon className="text-cyan-400 mb-3" size={40} />
               <h4 className="font-semibold text-white mb-1">{skill.name}</h4>
               <p className="text-xs text-gray-400">{skill.description}</p>
@@ -569,9 +569,9 @@ const ProjectCard = ({ project }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <motion.div layout className="rounded-lg overflow-hidden shadow-2xl bg-gray-800 border border-gray-700/50 transition-colors duration-300 hover:border-cyan-500/50">
+        <motion.div layout className="rounded-lg overflow-hidden shadow-2xl bg-slate-900/50 backdrop-blur-sm border border-cyan-400/20 transition-all duration-300 hover:border-cyan-400/50">
             <motion.div layout="position" className="cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-                <div className="h-64 bg-gray-900 flex items-center justify-center">
+                <div className="h-64 bg-black/20 flex items-center justify-center">
                     <img src={project.imageUrl} alt={project.title} className="w-full h-full object-contain" />
                 </div>
                 <div className="p-6">
@@ -600,13 +600,13 @@ const ProjectCard = ({ project }) => {
                         transition={{ duration: 0.4, ease: "easeInOut" }}
                         className="overflow-hidden"
                     >
-                        <div className="p-6 border-t border-gray-700">
+                        <div className="p-6 border-t border-cyan-400/20">
                             <h2 className="text-2xl md:text-3xl font-bold mt-2 mb-4">{project.details.headline}</h2>
                             <p className="text-gray-300 mb-8 leading-relaxed">{project.details.description}</p>
                             
                             <h3 className="text-xl font-bold text-white mb-4">Challenges & Solutions</h3>
                             {project.details.challenges.map((challenge, index) => (
-                                <div key={index} className="mb-6 bg-gray-800/50 p-4 rounded-lg border border-gray-700/50">
+                                <div key={index} className="mb-6 bg-slate-800/50 p-4 rounded-lg border border-cyan-400/10">
                                 <h4 className="font-semibold text-cyan-400 text-lg mb-2">{challenge.title}</h4>
                                 <p className="text-gray-300 text-sm mb-2"><strong className="text-gray-100">The Challenge:</strong> {challenge.text}</p>
                                 <p className="text-gray-300 text-sm"><strong className="text-gray-100">My Solution:</strong> {challenge.solution}</p>
@@ -652,9 +652,9 @@ const ProjectsSection = () => {
 const ResumeSection = () => (
     <AnimatedSection id="resume">
       <h2 className="text-4xl font-bold text-white text-center mb-12">Resume / CV</h2>
-      <div className="max-w-4xl mx-auto bg-gray-800/50 rounded-lg shadow-xl p-8 md:p-12 border border-gray-700/50">
+      <div className="max-w-4xl mx-auto bg-slate-900/50 backdrop-blur-sm border border-cyan-400/20 rounded-lg shadow-xl p-8 md:p-12">
         <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-1 border-b-2 md:border-b-0 md:border-r-2 border-gray-700/50 pb-6 md:pb-0 md:pr-8">
+            <div className="md:col-span-1 border-b-2 md:border-b-0 md:border-r-2 border-cyan-400/20 pb-6 md:pb-0 md:pr-8">
                 <h3 className="text-2xl font-bold text-cyan-400 mb-4">Education</h3>
                 <p className="text-white font-semibold text-lg">MEng Mechanical Engineering</p>
                 <p className="text-gray-400">University of Southampton (2022 - 2026)</p>
@@ -762,7 +762,7 @@ export default function App() {
         <ResumeSection />
         <ContactSection />
       </main>
-      <footer className="bg-gray-900/80 border-t border-gray-700/50 py-6 relative z-10">
+      <footer className="bg-slate-900/50 backdrop-blur-sm border-t border-cyan-400/20 py-6 relative z-10">
         <div className="container mx-auto text-center text-gray-400 text-sm">
           <p>&copy; {new Date().getFullYear()} Shafayat Mustafa. All Rights Reserved.</p>
         </div>
