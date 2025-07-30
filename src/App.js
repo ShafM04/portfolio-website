@@ -3,9 +3,11 @@ import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import * as THREE from 'three';
 import ReactMarkdown from 'react-markdown';
+import Latex from 'react-latex-next';
+import 'katex/dist/katex.min.css';
 import { Download, Mail, Linkedin, Github, X, Menu, ChevronsRight, Briefcase, BrainCircuit, Code, Cpu, Rocket, ChevronDown } from 'lucide-react';
 
-// --- Project Data (Restored) ---
+// --- Project Data (Updated) ---
 const projects = [
   {
     id: 1,
@@ -169,11 +171,11 @@ const projects = [
 ];
 
 const skills = [
-  { name: "FEA & Simulation", icon: BrainCircuit, description: "COMSOL, ANSYS" },
+  { name: "FEA & Simulation", icon: BrainCircuit, description: "COMSOL, ANSYS, MATLAB" },
   { name: "CAD & Manufacturing", icon: Briefcase, description: "SolidWorks, AutoCAD, Prototyping" },
-  { name: "Programming", icon: Code, description: "Python (NumPy), Arduino (C++)" },
+  { name: "Programming", icon: Code, description: "Python, Arduino (C++)" },
   { name: "Electronics", icon: Cpu, description: "Circuit Design, Sensor Integration" },
-  { name: "Data Analysis", icon: ChevronsRight, description: "Numerical Modelling, MATLAB" },
+  { name: "Data Analysis", icon: ChevronsRight, description: "Numerical Modelling, Pandas" },
   { name: "Project Management", icon: Rocket, description: "Critical Path, Gantt Charts" },
 ];
 
@@ -185,7 +187,7 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
-// --- Background Animation Component (Updated with 3-Stage Scroll Transition) ---
+// --- Background Animation Component (Updated) ---
 const BackgroundAnimation = ({ scrollProgress }) => {
     const mountRef = useRef(null);
     const sceneRef = useRef(null);
@@ -208,7 +210,6 @@ const BackgroundAnimation = ({ scrollProgress }) => {
         const scene = sceneRef.current;
         const renderer = rendererRef.current;
 
-        // --- Scene 1: Circuitry ---
         const circuitGroup = new THREE.Group();
         const signals = [];
         const GRID_SIZE = 30;
@@ -216,12 +217,18 @@ const BackgroundAnimation = ({ scrollProgress }) => {
         const HALF_GRID = (GRID_SIZE * CELL_SIZE) / 2;
         materialsRef.current.trace = new THREE.LineBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.2 });
         materialsRef.current.signal = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+        materialsRef.current.node = new THREE.MeshBasicMaterial({ color: 0x00aaff });
+
+        const nodeGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+        const nodePositions = new Set();
 
         for (let i = 0; i < 50; i++) {
             const points = [];
             let x = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
             let y = Math.floor(Math.random() * GRID_SIZE) * CELL_SIZE - HALF_GRID;
             points.push(new THREE.Vector3(x, y, 0));
+            nodePositions.add(`${x},${y}`);
+
             for (let j = 0; j < Math.floor(Math.random() * 5) + 3; j++) {
                 const length = (Math.floor(Math.random() * 5) + 2) * CELL_SIZE;
                 if (Math.random() > 0.5) x += Math.random() > 0.5 ? length : -length;
@@ -229,6 +236,7 @@ const BackgroundAnimation = ({ scrollProgress }) => {
                 x = Math.max(-HALF_GRID, Math.min(HALF_GRID, x));
                 y = Math.max(-HALF_GRID, Math.min(HALF_GRID, y));
                 points.push(new THREE.Vector3(x, y, 0));
+                nodePositions.add(`${x},${y}`);
             }
             const geometry = new THREE.BufferGeometry().setFromPoints(points);
             const trace = new THREE.Line(geometry, materialsRef.current.trace);
@@ -240,12 +248,18 @@ const BackgroundAnimation = ({ scrollProgress }) => {
                 circuitGroup.add(particle);
             }
         }
+        
+        nodePositions.forEach(pos => {
+            const [x, y] = pos.split(',').map(Number);
+            const node = new THREE.Mesh(nodeGeometry, materialsRef.current.node);
+            node.position.set(x, y, 0);
+            circuitGroup.add(node);
+        });
         scene.add(circuitGroup);
 
-        // --- Scene 2: Streaks ---
         const streaksGroup = new THREE.Group();
         materialsRef.current.streak = new THREE.SpriteMaterial({
-            color: 0xE0FFFF, // Light Cyan for good contrast
+            color: 0xE0FFFF,
             blending: THREE.AdditiveBlending,
             transparent: true,
             opacity: 0
@@ -309,24 +323,23 @@ const BackgroundAnimation = ({ scrollProgress }) => {
     }, []);
 
     useEffect(() => {
-        const { trace, signal, streak } = materialsRef.current;
-        if (trace && signal && streak) {
+        const { trace, signal, streak, node } = materialsRef.current;
+        if (trace && signal && streak && node) {
             const circuitOpacity = Math.max(0, 1 - scrollProgress * 2);
             trace.opacity = circuitOpacity * 0.2;
             signal.opacity = circuitOpacity;
+            node.opacity = circuitOpacity;
             streak.opacity = Math.min(0.7, scrollProgress * 1.5);
 
-            const color1 = new THREE.Color("#0a0a1a"); // Dark blue
-            const color2 = new THREE.Color("#003366"); // Lighter Dark Blue
-            const color3 = new THREE.Color("#00334d"); // Dark turquoise
+            const color1 = new THREE.Color("#0a0a1a");
+            const color2 = new THREE.Color("#003366");
+            const color3 = new THREE.Color("#00334d");
             const currentColor = new THREE.Color();
 
             if (scrollProgress < 0.5) {
-                const progress = scrollProgress * 2;
-                currentColor.lerpColors(color1, color2, progress);
+                currentColor.lerpColors(color1, color2, scrollProgress * 2);
             } else {
-                const progress = (scrollProgress - 0.5) * 2;
-                currentColor.lerpColors(color2, color3, progress);
+                currentColor.lerpColors(color2, color3, (scrollProgress - 0.5) * 2);
             }
 
             if (rendererRef.current) {
@@ -543,7 +556,10 @@ const AboutSection = () => {
           ))}
         </div>
         <div className="text-center mt-12">
-            <button onClick={() => setShowDetails(!showDetails)} className="inline-flex items-center bg-gray-700 text-white font-bold py-3 px-8 rounded-full hover:bg-gray-600 transition-transform duration-300 hover:scale-105 shadow-lg">
+            <button 
+              onClick={() => setShowDetails(!showDetails)} 
+              className="inline-flex items-center bg-slate-900/50 backdrop-blur-sm border border-cyan-400/20 text-white font-bold py-3 px-8 rounded-full hover:bg-cyan-400/20 transition-all duration-300 hover:scale-105 shadow-lg"
+            >
                 {showDetails ? 'Hide Details' : 'Show More Details'} <ChevronDown className={`ml-2 transition-transform ${showDetails ? 'rotate-180' : ''}`} size={20} />
             </button>
         </div>
@@ -571,8 +587,8 @@ const ProjectCard = ({ project }) => {
     return (
         <motion.div layout className="rounded-lg overflow-hidden shadow-2xl bg-slate-900/50 backdrop-blur-sm border border-cyan-400/20 transition-all duration-300 hover:border-cyan-400/50">
             <motion.div layout="position" className="cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-                <div className="h-64 bg-black/20 flex items-center justify-center">
-                    <img src={project.imageUrl} alt={project.title} className="w-full h-full object-contain" />
+                <div className="h-64 bg-black/20 flex items-center justify-center p-4">
+                    <img src={project.imageUrl} alt={project.title} className="max-w-full max-h-full object-contain" />
                 </div>
                 <div className="p-6">
                     <span className="text-sm text-cyan-400 font-semibold">{project.category}</span>
@@ -648,7 +664,7 @@ const ProjectsSection = () => {
   );
 };
 
-// --- Resume Section ---
+// --- Resume Section (with LaTeX) ---
 const ResumeSection = () => (
     <AnimatedSection id="resume">
       <h2 className="text-4xl font-bold text-white text-center mb-12">Resume / CV</h2>
@@ -667,6 +683,13 @@ const ResumeSection = () => (
                  <p className="text-gray-300 leading-relaxed">
                     <strong>Mechatronics Project:</strong> Led the electronics and programming for a group project to build a humidity-sensing installation. Designed and implemented all Arduino-based control systems, sensor integration, and servo-driven mechanisms.
                 </p>
+            </div>
+        </div>
+        <div className="mt-12 border-t border-cyan-400/20 pt-8">
+            <h3 className="text-2xl font-bold text-cyan-400 mb-4 text-center">Academic Presentation Example</h3>
+            <p className="text-gray-300 text-center mb-4">An example of my ability to present complex engineering principles, such as the Navier-Stokes equations for fluid dynamics:</p>
+            <div className="text-white bg-slate-800/50 p-4 rounded-lg text-center">
+                <Latex>{`$\\frac{\\partial \\mathbf{u}}{\\partial t} + (\\mathbf{u} \\cdot \\nabla) \\mathbf{u} = -\\frac{1}{\\rho} \\nabla p + \\nu \\nabla^2 \\mathbf{u}$`}</Latex>
             </div>
         </div>
          <div className="text-center mt-12">
