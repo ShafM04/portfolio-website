@@ -13,7 +13,6 @@ const projects = [
     id: 1,
     title: "Validating the 3D Inverse Problem in Stress Analysis",
     category: "MEng Dissertation",
-    // Using a reliable image host like Imgur is recommended to avoid cross-origin issues.
     imageUrl: "https://i.imgur.com/ys8pNGN.jpg",
     summary: "A novel 'inverse problem' methodology to determine a material's internal stress field from measured strain data, a critical challenge where material properties are unknown.",
     tools: ["Python", "COMSOL Multiphysics", "MATLAB", "PDE Formulation"],
@@ -104,7 +103,6 @@ const projects = [
     id: 4,
     title: "Keras House Price Prediction",
     category: "Machine Learning",
-    // FIXED: Replaced problematic GitHub URL with a placeholder.
     imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=Keras+Project",
     summary: "Deep learning model to predict house prices using Keras and real-world datasets.",
     tools: ["Python", "Keras", "Pandas", "Matplotlib"],
@@ -123,7 +121,6 @@ const projects = [
     id: 5,
     title: "Robotic Arm Kinematics",
     category: "Mechanics",
-    // FIXED: Replaced problematic GitHub URL with a placeholder.
     imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=Robotics+Project",
     summary: "2D robotic arm forward and inverse kinematics solver with visualization.",
     tools: ["Python", "NumPy", "Matplotlib"],
@@ -141,7 +138,6 @@ const projects = [
     id: 6,
     title: "3D Robotic Arm Kinematics",
     category: "Mechanics",
-    // FIXED: Replaced problematic GitHub URL with a placeholder.
     imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=3D+Robotics",
     summary: "Interactive visualization of 3D kinematic chain for robotics.",
     tools: ["Python", "Matplotlib", "3D Geometry"],
@@ -159,7 +155,6 @@ const projects = [
     id: 7,
     title: "6-DOF Robotics Simulator",
     category: "Simulation",
-    // FIXED: Replaced problematic GitHub URL with a placeholder.
     imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=6-DOF+Simulator",
     summary: "Simulates a full 6-DOF robotic manipulator in a virtual space.",
     tools: ["Python", "PyOpenGL", "Forward Kinematics", "Matrix Transformations"],
@@ -171,6 +166,84 @@ const projects = [
       ],
       visuals: [],
       outcome: "Successfully simulated realistic joint motion and workspace limits."
+    }
+  },
+  {
+    id: 8,
+    title: "YOLO-Based Robotic Grasping System",
+    category: "Computer Vision / Robotics",
+    imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=YOLO+Robotics",
+    summary: "A real-time robotic grasping system leveraging YOLOv5 to detect objects and infer optimal grasping points, enabling pick-and-place capabilities in dynamic environments.",
+    tools: ["Python", "YOLOv5", "OpenCV", "PyTorch", "Grasp Inference"],
+    details: {
+      headline: "Smart Grasping: Real-Time Robotic Object Detection & Manipulation",
+      description: "This project bridges deep learning and robotics to achieve real-time object grasping. Using YOLOv5 for object detection, I engineered a grasping pipeline that translates bounding boxes into actionable robotic grasp commands. The solution is designed for cluttered, unpredictable environments, laying the groundwork for industrial or assistive robotic arms.",
+      challenges: [
+        {
+          title: "Reliable Grasp Point Estimation",
+          text: "YOLO bounding boxes alone don’t offer graspable regions, especially for irregularly shaped items.",
+          solution: "I developed a geometric algorithm to infer grasp rectangles from object contours, ensuring the output was physically meaningful for robotic fingers."
+        },
+        {
+          title: "Low-Latency Object Detection",
+          text: "Real-time operation was essential to avoid lag during pick-and-place tasks, especially with moving targets.",
+          solution: "Optimised the YOLOv5 model using ONNX and GPU acceleration, achieving sub-40ms inference latency on high-resolution video feeds."
+        }
+      ],
+      visuals: [],
+      outcome: "The system successfully detects and selects graspable objects in real-time, providing a foundational platform for future integration with robotic manipulators and closed-loop grasp feedback systems."
+    }
+  },
+  {
+    id: 9,
+    title: "CNN-Based Surface Defect Detection for Quality Assurance",
+    category: "Deep Learning / Quality Control",
+    imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=CNN+Defect+Detection",
+    summary: "A deep learning system to automate visual inspection in manufacturing, using convolutional neural networks to detect and classify surface-level defects with high accuracy.",
+    tools: ["Python", "TensorFlow", "Keras", "CNN", "Image Processing"],
+    details: {
+      headline: "Vision-Based Inspection: CNN for Defect Detection",
+      description: "This project automates the manual visual inspection process used in manufacturing for surface quality control. Using a custom-trained convolutional neural network (CNN), the system classifies surface defects—like scratches, dents, and blemishes—into predefined categories to assist in real-time quality decisions.",
+      challenges: [
+        {
+          title: "Unbalanced and Noisy Data",
+          text: "Defect datasets were often small, with class imbalances and poor lighting variations that hindered performance.",
+          solution: "I applied extensive image augmentation (contrast shifts, blur, rotation) to synthetically balance the dataset and simulate real-world lighting inconsistencies."
+        },
+        {
+          title: "Accuracy vs. Speed Tradeoff",
+          text: "A larger model improved accuracy but introduced significant inference delays, making it unsuitable for in-line inspection.",
+          solution: "Tuned the model architecture and reduced complexity by pruning unnecessary layers while retaining over 95% validation accuracy."
+        }
+      ],
+      visuals: [],
+      outcome: "The model achieved over 96% classification accuracy and proved effective for automating inspection in quality-critical environments, enabling scalable, non-subjective defect classification."
+    }
+  },
+  {
+    id: 10,
+    title: "3D Reconstruction Pipeline from Stereo Images",
+    category: "Computer Vision",
+    imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=3D+Reconstruction",
+    summary: "Developed a computer vision pipeline to reconstruct 3D surfaces from stereo images, using depth maps and point cloud processing to recover object geometry.",
+    tools: ["Python", "OpenCV", "Stereo Vision", "Point Cloud Processing", "3D Geometry"],
+    details: {
+      headline: "From Pixels to Points: 3D Reconstruction Using Stereo Vision",
+      description: "This project explores how to extract meaningful 3D geometry from 2D image pairs using stereo vision and structured light concepts. I built a complete pipeline that transforms left-right stereo image pairs into dense disparity maps and subsequently into 3D point clouds, suitable for reverse engineering, mapping, or AR/VR reconstruction.",
+      challenges: [
+        {
+          title: "Accurate Disparity Estimation",
+          text: "Stereo correspondence algorithms struggled with low-texture areas, introducing holes in the reconstructed surfaces.",
+          solution: "Applied Semi-Global Matching (SGM) and post-processing filters to fill occlusions and remove mismatches, significantly improving depth fidelity."
+        },
+        {
+          title: "Noisy Point Clouds",
+          text: "Raw depth maps generated noisy point clouds with many outliers, especially at object boundaries.",
+          solution: "Used statistical outlier removal and voxel grid filtering to denoise the point clouds and downsample for real-time visualization."
+        }
+      ],
+      visuals: [],
+      outcome: "Successfully reconstructed 3D scenes from stereo images with clear structure and scale. The project serves as a low-cost alternative to LiDAR scanning for applications in robotics, simulation, and computer graphics."
     }
   }
 ];
@@ -202,10 +275,8 @@ const VideoIntro = ({ onVideoEnd }) => {
       transition={{ duration: 1.0 }}
     >
       <video
-        // IMPORTANT: Replace this with the path to your video in the `public` folder
         src="/intro-video.mp4" 
         autoPlay
-        // The 'muted' attribute is necessary for autoplay to work in most modern browsers.
         muted 
         playsInline
         onEnded={onVideoEnd}
