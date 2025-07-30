@@ -219,7 +219,7 @@ const BackgroundAnimation = ({ scrollProgress }) => {
         materialsRef.current.signal = new THREE.MeshBasicMaterial({ color: 0x00ffff });
         materialsRef.current.node = new THREE.MeshBasicMaterial({ color: 0x00aaff });
 
-        const nodeGeometry = new THREE.RingGeometry(0.4, 0.6, 16); // Changed to RingGeometry
+        const nodeGeometry = new THREE.RingGeometry(0.4, 0.6, 16);
         const nodePositions = new Set();
 
         for (let i = 0; i < 50; i++) {
@@ -329,18 +329,17 @@ const BackgroundAnimation = ({ scrollProgress }) => {
             trace.opacity = circuitOpacity * 0.2;
             signal.opacity = circuitOpacity;
             node.opacity = circuitOpacity;
-            streak.opacity = Math.min(0.7, scrollProgress * 1.5);
+            
+            const streakOpacity = Math.min(1, scrollProgress * 2); // Streaks fully visible at halfway
+            streak.opacity = streakOpacity * 0.7;
 
-            const color1 = new THREE.Color("#0a0a1a");
-            const color2 = new THREE.Color("#003366");
-            const color3 = new THREE.Color("#00334d");
+            const color1 = new THREE.Color("#0a0a1a"); // Dark blue/black
+            const color2 = new THREE.Color("#003366"); // The target blue shade
             const currentColor = new THREE.Color();
 
-            if (scrollProgress < 0.5) {
-                currentColor.lerpColors(color1, color2, scrollProgress * 2);
-            } else {
-                currentColor.lerpColors(color2, color3, (scrollProgress - 0.5) * 2);
-            }
+            const transitionProgress = Math.min(1, scrollProgress * 2);
+            
+            currentColor.lerpColors(color1, color2, transitionProgress);
 
             if (rendererRef.current) {
                 rendererRef.current.setClearColor(currentColor, 1);
