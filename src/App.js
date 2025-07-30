@@ -317,8 +317,8 @@ const BackgroundAnimation = ({ scrollProgress }) => {
             streak.opacity = Math.min(0.7, scrollProgress * 1.5);
 
             const color1 = new THREE.Color("#0a0a1a"); // Dark blue
-            const color2 = new THREE.Color("#00334d"); // Dark turquoise
-            const color3 = new THREE.Color("#004c7d"); // Darker Sky Blue
+            const color2 = new THREE.Color("#004c7d"); // Darker Sky Blue
+            const color3 = new THREE.Color("#00334d"); // Dark turquoise
             const currentColor = new THREE.Color();
 
             if (scrollProgress < 0.5) {
