@@ -219,7 +219,7 @@ const BackgroundAnimation = ({ scrollProgress }) => {
         materialsRef.current.signal = new THREE.MeshBasicMaterial({ color: 0x00ffff });
         materialsRef.current.node = new THREE.MeshBasicMaterial({ color: 0x00aaff });
 
-        const nodeGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+        const nodeGeometry = new THREE.RingGeometry(0.4, 0.6, 16); // Changed to RingGeometry
         const nodePositions = new Set();
 
         for (let i = 0; i < 50; i++) {
