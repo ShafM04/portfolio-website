@@ -172,7 +172,7 @@ const projects = [
     id: 8,
     title: "YOLO-Based Robotic Grasping System",
     category: "Computer Vision / Robotics",
-    imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=YOLO+Robotics",
+    imageUrl: "https://imgur.com/28uYx4P",
     summary: "A real-time robotic grasping system leveraging YOLOv5 to detect objects and infer optimal grasping points, enabling pick-and-place capabilities in dynamic environments.",
     tools: ["Python", "YOLOv5", "OpenCV", "PyTorch", "Grasp Inference"],
     details: {
@@ -198,7 +198,7 @@ const projects = [
     id: 9,
     title: "CNN-Based Surface Defect Detection for Quality Assurance",
     category: "Deep Learning / Quality Control",
-    imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=CNN+Defect+Detection",
+    imageUrl: "https://imgur.com/Mk1I0QZ",
     summary: "A deep learning system to automate visual inspection in manufacturing, using convolutional neural networks to detect and classify surface-level defects with high accuracy.",
     tools: ["Python", "TensorFlow", "Keras", "CNN", "Image Processing"],
     details: {
@@ -224,7 +224,7 @@ const projects = [
     id: 10,
     title: "3D Reconstruction Pipeline from Stereo Images",
     category: "Computer Vision",
-    imageUrl: "https://placehold.co/1200x800/1a202c/ffffff?text=3D+Reconstruction",
+    imageUrl: "https://imgur.com/RKmNSKS",
     summary: "Developed a computer vision pipeline to reconstruct 3D surfaces from stereo images, using depth maps and point cloud processing to recover object geometry.",
     tools: ["Python", "OpenCV", "Stereo Vision", "Point Cloud Processing", "3D Geometry"],
     details: {
