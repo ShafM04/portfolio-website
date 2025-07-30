@@ -167,7 +167,7 @@ const projects = [
       visuals: [],
       outcome: "Successfully simulated realistic joint motion and workspace limits."
     }
-  }
+  },
   {
   id: 8,
   title: "YOLO-Based Robotic Grasping",
