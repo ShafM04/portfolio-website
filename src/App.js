@@ -167,7 +167,86 @@ const projects = [
       visuals: [],
       outcome: "Successfully simulated realistic joint motion and workspace limits."
     }
+  },
+  {
+  id: 8,
+  title: "YOLO-Based Robotic Grasping",
+  category: "Computer Vision / Robotics",
+  imageUrl: "https://repository-images.githubusercontent.com/785742003/0fc04a23-b6d1-4a3e-930f-6fd9f11e83aa",
+  summary: "A deep learning-based system for robotic grasp detection using YOLOv5 and OpenCV, capable of identifying and grasping objects in real time.",
+  tools: ["Python", "YOLOv5", "OpenCV", "PyTorch"],
+  details: {
+    headline: "Real-Time Object Grasping Using YOLOv5",
+    description: "This project integrates YOLOv5 object detection with robotic grasp planning. It detects target objects in real-time video feeds and determines optimal grasp points for a robotic arm, enabling autonomous pick-and-place operations.",
+    challenges: [
+      {
+        title: "Precision Grasp Detection",
+        text: "Identifying stable and valid grasping positions on arbitrary objects from a 2D camera feed was non-trivial.",
+        solution: "Implemented bounding box processing and grasp rectangle inference using a confidence threshold to ensure viable grasping zones."
+      },
+      {
+        title: "Integration with Real-Time Feeds",
+        text: "Running YOLO inference fast enough to enable real-time control of the robot arm posed a major performance challenge.",
+        solution: "Optimized the detection pipeline by resizing input frames and leveraging GPU acceleration with PyTorch and OpenCV."
+      }
+    ],
+    visuals: [],
+    outcome: "Achieved real-time object detection and grasp planning, laying the groundwork for future integration with physical manipulators and multi-object environments."
   }
+},
+{
+  id: 9,
+  title: "Surface Defect Detection Using CNN",
+  category: "Deep Learning / Quality Control",
+  imageUrl: "https://repository-images.githubusercontent.com/785742386/2e5c3730-9936-4f6a-b70f-e7e5e61f1f9e",
+  summary: "A convolutional neural network trained to detect and classify surface defects in manufactured components from image data.",
+  tools: ["Python", "TensorFlow", "Keras", "CNN"],
+  details: {
+    headline: "Automated Defect Classification via Deep Learning",
+    description: "This project addresses quality control in manufacturing by using a CNN to automatically detect surface defects from labeled image datasets. The model classifies defect types such as scratches, dents, and discoloration with high accuracy.",
+    challenges: [
+      {
+        title: "Imbalanced Dataset",
+        text: "Some defect types had significantly fewer samples, which skewed training results.",
+        solution: "Used data augmentation techniques (rotation, flipping, noise) to synthetically increase dataset diversity and balance class distribution."
+      },
+      {
+        title: "Model Generalisation",
+        text: "The model overfit on training data early in development.",
+        solution: "Implemented dropout, batch normalization, and early stopping to prevent overfitting and improve generalisation to unseen samples."
+      }
+    ],
+    visuals: [],
+    outcome: "The model achieved over 95% accuracy on the validation set, providing a viable tool for automated inspection in industrial settings."
+  }
+},
+{
+  id: 10,
+  title: "3D Reconstruction from 2D Views",
+  category: "Computer Vision",
+  imageUrl: "https://repository-images.githubusercontent.com/785742691/8c510b88-3384-4064-8003-7cf13a463097",
+  summary: "A pipeline for reconstructing 3D geometry from 2D images using stereo vision techniques and point cloud generation.",
+  tools: ["Python", "OpenCV", "Point Cloud Library", "Stereo Vision"],
+  details: {
+    headline: "Generating 3D Models from 2D Images",
+    description: "This project builds a stereo vision system to infer depth and generate 3D representations of objects from image pairs. The goal is to enable low-cost 3D scanning and reconstruction using only standard cameras.",
+    challenges: [
+      {
+        title: "Depth Map Generation",
+        text: "Generating accurate disparity maps from image pairs was sensitive to lighting and texture variation.",
+        solution: "Implemented stereo block matching and tuned parameters for window size, disparity range, and filtering to improve depth accuracy."
+      },
+      {
+        title: "Point Cloud Noise",
+        text: "Initial point clouds were noisy and sparse.",
+        solution: "Applied median filtering and outlier removal algorithms to enhance the fidelity and smoothness of the reconstructed mesh."
+      }
+    ],
+    visuals: [],
+    outcome: "The system successfully reconstructs detailed 3D shapes from 2D inputs, supporting potential applications in AR, reverse engineering, and robotic navigation."
+  }
+}
+
 ];
 
 const skills = [
