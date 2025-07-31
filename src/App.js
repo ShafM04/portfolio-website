@@ -800,13 +800,14 @@ const ResumeSection = () => (
     </AnimatedSection>
 );
 
-// --- NEW Game Section ---
+// --- Game Section (Updated) ---
 const GameSection = () => {
     const [gameState, setGameState] = useState({
         score: 0,
         timeLeft: 30,
         isActive: false,
-        targets: []
+        targets: [],
+        showCongrats: false
     });
     const gameAreaRef = useRef(null);
     const timerId = useRef(null);
@@ -817,7 +818,8 @@ const GameSection = () => {
             score: 0,
             timeLeft: 30,
             isActive: true,
-            targets: []
+            targets: [],
+            showCongrats: false
         });
     };
 
@@ -828,7 +830,7 @@ const GameSection = () => {
                     if (prev.timeLeft <= 1) {
                         clearInterval(timerId.current);
                         clearInterval(spawnerId.current);
-                        return { ...prev, timeLeft: 0, isActive: false };
+                        return { ...prev, timeLeft: 0, isActive: false, showCongrats: true };
                     }
                     return { ...prev, timeLeft: prev.timeLeft - 1 };
                 });
@@ -863,7 +865,7 @@ const GameSection = () => {
 
     return (
         <AnimatedSection id="game">
-            <h2 className="text-4xl font-bold text-white text-center mb-4">Skill Connect Challenge</h2>
+            <h2 className="text-4xl font-bold text-white text-center mb-4" style={{ textShadow: '0 0 15px rgba(0, 255, 255, 0.7)' }}>Skill Connect Challenge</h2>
             <p className="text-center text-gray-300 mb-8">Test your reaction speed! Click the targets as they appear.</p>
             <div className="max-w-4xl mx-auto bg-slate-900/50 backdrop-blur-sm border border-cyan-400/20 rounded-lg shadow-xl p-8">
                 <div className="flex justify-around items-center mb-6 text-2xl font-bold">
@@ -872,7 +874,7 @@ const GameSection = () => {
                 </div>
                 <div 
                     ref={gameAreaRef} 
-                    className="relative w-full h-96 bg-black/20 rounded-lg overflow-hidden border border-cyan-400/30"
+                    className="relative w-full h-96 bg-black/20 rounded-lg overflow-hidden border border-cyan-400/30 flex justify-center items-center"
                 >
                     <AnimatePresence>
                         {gameState.isActive && gameState.targets.map(target => (
@@ -887,6 +889,19 @@ const GameSection = () => {
                                 onClick={() => handleTargetClick(target.id)}
                             />
                         ))}
+                    </AnimatePresence>
+                    <AnimatePresence>
+                        {gameState.showCongrats && (
+                            <motion.div
+                                className="text-center"
+                                initial={{ opacity: 0, scale: 0.5 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.5 }}
+                            >
+                                <h3 className="text-4xl font-bold text-white" style={{ textShadow: '0 0 10px rgba(255, 255, 255, 0.7)' }}>Challenge Complete!</h3>
+                                <p className="text-2xl text-cyan-400 mt-2">Final Score: {gameState.score}</p>
+                            </motion.div>
+                        )}
                     </AnimatePresence>
                 </div>
                 <div className="text-center mt-6">
